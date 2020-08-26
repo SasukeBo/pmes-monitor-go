@@ -23,6 +23,9 @@ require (
 	github.com/moul/http2curl v1.0.0 // indirect
 	github.com/onsi/ginkgo v1.14.0 // indirect
 	github.com/smartystreets/goconvey v1.6.4 // indirect
+	github.com/surge/glog v0.0.0-20141108051140-2578deb2b95c
+	github.com/surgemq/message v0.0.0-20151017233315-2b7ca1ac6121
+	github.com/surgemq/surgemq v0.0.0-20181111185059-782e2da07805
 	github.com/valyala/fasthttp v1.14.0 // indirect
 	github.com/vektah/gqlparser/v2 v2.0.1
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
