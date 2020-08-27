@@ -27,7 +27,9 @@ func TestConnect(t *testing.T) {
 func TestMQTTSend(t *testing.T) {
 	c := &service.Client{}
 	connMsg := newConnectMessage("test")
-	c.Connect("tcp://192.168.9.93:44765", connMsg)
+	if err := c.Connect("tcp://192.168.9.93:44765", connMsg); err != nil {
+		t.Fatal(err)
+	}
 
 	pubMsg := message.NewPublishMessage()
 	pubMsg.SetTopic([]byte("abc1"))
