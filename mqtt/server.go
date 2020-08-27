@@ -2,6 +2,8 @@ package mqtt
 
 import (
 	"errors"
+	"fmt"
+	"github.com/SasukeBo/configer"
 	"github.com/SasukeBo/log"
 	"github.com/surgemq/message"
 	"github.com/surgemq/surgemq/service"
@@ -9,11 +11,12 @@ import (
 )
 
 const (
-	uri                  = "tcp://127.0.0.1:1883"
 	healthCheckTopic     = "HEALTH_CHECK"
 	globalSubscriber     = "GLOBAL_SUBSCRIBER"
 	healthCheckPublisher = "HEALTH_CHECK_PUBLISHER"
 )
+
+var uri string
 
 func Serve() {
 	svr := &service.Server{
@@ -27,6 +30,7 @@ func Serve() {
 
 	go globalSubscribe()
 	// Listen and serve connections at localhost:1883
+	log.Info("MQTT server listening on %s", configer.GetString("mqtt_port"))
 	svr.ListenAndServe(uri)
 }
 
@@ -145,4 +149,8 @@ func setHeartBeat() error {
 	}()
 
 	return nil
+}
+
+func init() {
+	uri = fmt.Sprintf("tcp://0.0.0.0:%s", configer.GetString("mqtt_port"))
 }

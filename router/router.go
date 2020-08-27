@@ -11,6 +11,8 @@ func Start() {
 	r := gin.Default()
 	r.Use(gin.Recovery())
 
-	log.Info("start service on [%s] mode", configer.GetEnv("env"))
-	r.Run(fmt.Sprintf(":%s", configer.GetString("service_port")))
+	var port = configer.GetString("service_port")
+	log.Info("Start service on [%s] mode", configer.GetEnv("env"))
+	log.Info("HTTP service listening on %s", port)
+	r.Run(fmt.Sprintf(":%s", port))
 }
