@@ -8,15 +8,19 @@ import (
 	"time"
 )
 
+//var host = "tcp://192.168.9.135:1883"
+//var host = "tcp://localhost:1883"
+var host = "tcp://192.168.9.93:44765"
+
 func TestConnect(t *testing.T) {
 	c := &service.Client{}
-	connMsg := newConnectMessage("test")
-	c.Connect(uri, connMsg)
+	connMsg := newConnectMessage("test_subscriber")
+	c.Connect(host, connMsg)
 
 	subMsg := message.NewSubscribeMessage()
 	subMsg.AddTopic([]byte("abc1"), message.QosAtMostOnce)
 	c.Subscribe(subMsg, nil, func(msg *message.PublishMessage) error {
-		fmt.Printf("%s: %s", string(msg.Topic()), string(msg.Payload()))
+		fmt.Printf("%s: %s\n", string(msg.Topic()), string(msg.Payload()))
 		return nil
 	})
 
@@ -26,14 +30,14 @@ func TestConnect(t *testing.T) {
 
 func TestMQTTSend(t *testing.T) {
 	c := &service.Client{}
-	connMsg := newConnectMessage("test")
-	if err := c.Connect("tcp://192.168.9.93:44765", connMsg); err != nil {
+	connMsg := newConnectMessage("test_publisher")
+	if err := c.Connect(host, connMsg); err != nil {
 		t.Fatal(err)
 	}
 
 	pubMsg := message.NewPublishMessage()
 	pubMsg.SetTopic([]byte("abc1"))
-	pubMsg.SetPayload([]byte("hello world"))
+	pubMsg.SetPayload([]byte("hello world\n"))
 	for i := 0; i < 30; i++ {
 		c.Publish(pubMsg, nil)
 		<-time.After(time.Second)
