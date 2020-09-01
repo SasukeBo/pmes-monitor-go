@@ -10,8 +10,8 @@ import (
 	"github.com/SasukeBo/pmes-device-monitor/api/v1/logic"
 )
 
-func (r *mutationResolver) ImportErrors(ctx context.Context, fileToken string) (string, error) {
-	return logic.ImportErrors(ctx, fileToken)
+func (r *mutationResolver) ImportErrors(ctx context.Context, deviceID int, fileToken string) (string, error) {
+	return logic.ImportErrors(ctx, deviceID, fileToken)
 }
 
 // Mutation returns generated.MutationResolver implementation.

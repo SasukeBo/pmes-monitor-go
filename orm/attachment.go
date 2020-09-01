@@ -17,3 +17,7 @@ type Attachment struct {
 	Token       string `gorm:"COMMENT:'文件Token';not null"`
 	ContentType string `gorm:"COMMENT:'文件类型';not null"`
 }
+
+func (a *Attachment) GetByToken(token string) error {
+	return Model(a).Where("token = ?", token).First(a).Error
+}

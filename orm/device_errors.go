@@ -8,6 +8,7 @@ import (
 
 type DeviceError struct {
 	gorm.Model
-	Index   int    `gorm:"COMMENT:'故障代码中的位置';not null"`
-	Message string `gorm:"COMMENT:'错误信息';not null"`
+	DeviceID uint   `gorm:"COMMENT:'设备ID';not null;index"`
+	Index    int    `gorm:"COMMENT:'故障代码中的位置';column:idx;not null"`
+	Message  string `gorm:"COMMENT:'错误信息';not null"`
 }

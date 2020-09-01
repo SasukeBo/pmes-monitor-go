@@ -39,10 +39,26 @@ func init() {
 	DB.LogMode(false)
 	env := configer.GetString("env")
 
+	err = DB.AutoMigrate(
+		&DeviceError{},
+		&Device{},
+		&Attachment{},
+		&DeviceErrorLog{},
+		&ProduceLog{},
+	).Error
+	if err != nil {
+		panic(fmt.Errorf("migrate to db error: \n%v", err.Error()))
+	}
+
 	if env != "test" && env != "TEST" {
-		tableNames := []string{}
+		tableNames := []string{"device_errors", "devices", "attachments", "device_error_logs", "produce_logs"}
 		setupUTF8GeneralCI(tableNames)
 	}
+	setupIndex()
+}
+
+func setupIndex() {
+	DB.Model(&DeviceError{}).AddUniqueIndex("unique_idx_device_error_device_id_idx", "device_id", "idx")
 }
 
 func createUriWithDBName(name string) string {

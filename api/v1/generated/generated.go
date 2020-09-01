@@ -43,7 +43,7 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Mutation struct {
-		ImportErrors func(childComplexity int, fileToken string) int
+		ImportErrors func(childComplexity int, deviceID int, fileToken string) int
 	}
 
 	Query struct {
@@ -52,7 +52,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	ImportErrors(ctx context.Context, fileToken string) (string, error)
+	ImportErrors(ctx context.Context, deviceID int, fileToken string) (string, error)
 }
 type QueryResolver interface {
 	Hello(ctx context.Context, name string) (string, error)
@@ -83,7 +83,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ImportErrors(childComplexity, args["fileToken"].(string)), true
+		return e.complexity.Mutation.ImportErrors(childComplexity, args["deviceID"].(int), args["fileToken"].(string)), true
 
 	case "Query.hello":
 		if e.complexity.Query.Hello == nil {
@@ -162,7 +162,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var sources = []*ast.Source{
 	&ast.Source{Name: "schema/root.mutation.graphql", Input: `type Mutation {
-    importErrors(fileToken: String!): String!
+    importErrors(deviceID: Int!, fileToken: String!): String!
 }`, BuiltIn: false},
 	&ast.Source{Name: "schema/root.query.graphql", Input: `type Query {
    hello(name: String!): String!
@@ -178,14 +178,22 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Mutation_importErrors_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["fileToken"]; ok {
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+	var arg0 int
+	if tmp, ok := rawArgs["deviceID"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["fileToken"] = arg0
+	args["deviceID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["fileToken"]; ok {
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["fileToken"] = arg1
 	return args, nil
 }
 
@@ -277,7 +285,7 @@ func (ec *executionContext) _Mutation_importErrors(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ImportErrors(rctx, args["fileToken"].(string))
+		return ec.resolvers.Mutation().ImportErrors(rctx, args["deviceID"].(int), args["fileToken"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1793,6 +1801,20 @@ func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interf
 
 func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.SelectionSet, v bool) graphql.Marshaler {
 	res := graphql.MarshalBoolean(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	return graphql.UnmarshalInt(v)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
