@@ -1,0 +1,49 @@
+type DeviceTypeWrap {
+    total: Int!
+    types: [DeviceType!]!
+}
+
+type DeviceType {
+    id: Int!
+    name: String!
+    errorCode: ErrorCode
+    createdAt: Time!
+}
+
+type User {
+    id: Int!
+    name: String!
+}
+
+type ErrorCode {
+    id: Int!
+    errors: [String!]!
+}
+
+type Device {
+    id: Int!
+    createdAt: Time!
+    number: String!
+    deviceType: DeviceType!
+    mac: String!
+    address: String!
+    status: String!
+}
+
+type DeviceWrap {
+    total: Int!
+    devices: [Device!]!
+}
+
+input CreateDeviceInput {
+    deviceTypeID: Int!
+    deviceInputs: [DeviceInput!]!
+}
+
+input DeviceInput {
+    number: String!
+    mac: String!
+    address: String
+}
+
+scalar Time

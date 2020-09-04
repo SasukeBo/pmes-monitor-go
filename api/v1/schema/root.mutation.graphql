@@ -1,3 +1,13 @@
 type Mutation {
     importErrors(deviceID: Int!, fileToken: String!): String!
+
+    # Admin APIS
+    "创建机种"
+    adminDeviceTypeCreate(name: String!): String!
+    "为机种添加错误代码"
+    adminDeviceTypeAddErrorCode(deviceTypeID: Int!, errors: [String!]!): String!
+    "保存错误代码"
+    adminSaveErrorCode(id: Int!, errors: [String!]!): String!
+    "批量创建设备"
+    adminCreateDevices(input: CreateDeviceInput!): String!
 }

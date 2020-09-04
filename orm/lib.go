@@ -40,11 +40,12 @@ func init() {
 	env := configer.GetString("env")
 
 	err = DB.AutoMigrate(
-		&DeviceError{},
+		&DeviceErrorCode{},
 		&Device{},
 		&Attachment{},
 		&DeviceErrorLog{},
 		&ProduceLog{},
+		&DeviceType{},
 	).Error
 	if err != nil {
 		panic(fmt.Errorf("migrate to db error: \n%v", err.Error()))
@@ -55,10 +56,11 @@ func init() {
 		setupUTF8GeneralCI(tableNames)
 	}
 	setupIndex()
+	DB.LogMode(true)
 }
 
 func setupIndex() {
-	DB.Model(&DeviceError{}).AddUniqueIndex("unique_idx_device_error_device_id_idx", "device_id", "idx")
+	return
 }
 
 func createUriWithDBName(name string) string {

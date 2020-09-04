@@ -12,6 +12,7 @@ import (
 
 const (
 	healthCheckTopic     = "HEALTH_CHECK"
+	authenticateTopic    = "AUTHENTICATE"
 	globalSubscriber     = "GLOBAL_SUBSCRIBER"
 	healthCheckPublisher = "HEALTH_CHECK_PUBLISHER"
 )
