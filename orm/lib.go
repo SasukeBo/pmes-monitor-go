@@ -40,6 +40,7 @@ func init() {
 	env := configer.GetString("env")
 
 	err = DB.AutoMigrate(
+		&Dashboard{},
 		&DeviceErrorCode{},
 		&Device{},
 		&Attachment{},

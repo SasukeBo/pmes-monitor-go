@@ -275,3 +275,21 @@ func AdminDevices(ctx context.Context, search *string, page int, limit int) (*mo
 		Devices: outs,
 	}, nil
 }
+
+func LoadDevices(ctx context.Context, ids []int) []*model.Device {
+	var devices []orm.Device
+	if err := orm.Model(&orm.Device{}).Where("id in (?)", ids).Find(&devices).Error; err != nil {
+		return nil
+	}
+
+	var outs []*model.Device
+	for _, d := range devices {
+		var out model.Device
+		if err := copier.Copy(&out, &d); err != nil {
+			continue
+		}
+		outs = append(outs, &out)
+	}
+
+	return outs
+}

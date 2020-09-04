@@ -10,4 +10,6 @@ type Mutation {
     adminSaveErrorCode(id: Int!, errors: [String!]!): String!
     "批量创建设备"
     adminCreateDevices(input: CreateDeviceInput!): String!
+    "创建看板"
+    adminCreateDashboard(name: String!, deviceIDs: [Int!]!): String!
 }

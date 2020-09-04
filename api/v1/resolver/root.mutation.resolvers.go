@@ -31,6 +31,10 @@ func (r *mutationResolver) AdminCreateDevices(ctx context.Context, input model.C
 	return logic.AdminCreateDevices(ctx, input)
 }
 
+func (r *mutationResolver) AdminCreateDashboard(ctx context.Context, name string, deviceIDs []int) (string, error) {
+	return logic.AdminCreateDashboard(ctx, name, deviceIDs)
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 

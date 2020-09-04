@@ -7,6 +7,11 @@ type CreateDeviceInput struct {
 	DeviceInputs []*DeviceInput `json:"deviceInputs"`
 }
 
+type DashboardWrap struct {
+	Total      int          `json:"total"`
+	Dashboards []*Dashboard `json:"dashboards"`
+}
+
 type DeviceInput struct {
 	Number  string  `json:"number"`
 	Mac     string  `json:"mac"`

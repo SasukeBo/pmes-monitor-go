@@ -1,3 +1,5 @@
+scalar Time
+
 type DeviceTypeWrap {
     total: Int!
     types: [DeviceType!]!
@@ -46,4 +48,14 @@ input DeviceInput {
     address: String
 }
 
-scalar Time
+type Dashboard {
+    id: Int!
+    name: String!
+    devices: [Device!]!
+    createdAt: Time!
+}
+
+type DashboardWrap {
+    total: Int!
+    dashboards: [Dashboard!]!
+}

@@ -18,3 +18,10 @@ type Device struct {
 	Address      string    `json:"address"`
 	Status       string    `json:"status"`
 }
+
+type Dashboard struct {
+	ID        int       `json:"id"`
+	Name      string    `json:"name"`
+	DeviceIDs []int     `json:"deviceIDs"`
+	CreatedAt time.Time `json:"createdAt"`
+}

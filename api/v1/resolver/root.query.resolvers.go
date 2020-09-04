@@ -28,6 +28,10 @@ func (r *queryResolver) AdminDevices(ctx context.Context, search *string, page i
 	return logic.AdminDevices(ctx, search, page, limit)
 }
 
+func (r *queryResolver) AdminDashboards(ctx context.Context, search *string, page int, limit int) (*model.DashboardWrap, error) {
+	return logic.AdminDashboards(ctx, search, page, limit)
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
