@@ -17,6 +17,7 @@ func Start() {
 	//  API v1
 	api1 := r.Group("/monitor/api", handler.HttpRequestLogger(), handler.InjectGinContext())
 	{
+		api1.POST("v1/admin", handler.API1Admin())
 		api1.POST("v1", handler.API1())
 	}
 

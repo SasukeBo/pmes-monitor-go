@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/SasukeBo/configer"
 	"github.com/SasukeBo/log"
-	"github.com/SasukeBo/pmes-device-monitor/api/v1/model"
+	"github.com/SasukeBo/pmes-device-monitor/api/v1/admin/model"
 	"github.com/SasukeBo/pmes-device-monitor/errormap"
 	"github.com/SasukeBo/pmes-device-monitor/orm"
 	"github.com/SasukeBo/pmes-device-monitor/orm/types"

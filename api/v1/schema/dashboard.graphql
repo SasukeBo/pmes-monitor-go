@@ -1,0 +1,12 @@
+type DashboardWrap {
+    total: Int!
+    dashboards: [Dashboard!]!
+}
+
+type Dashboard {
+    id: Int!
+    name: String!
+    deviceTotal: Int!
+    runningTotal: Int!
+    errorTotal: Int!
+}

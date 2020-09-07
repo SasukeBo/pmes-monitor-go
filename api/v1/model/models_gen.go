@@ -2,38 +2,15 @@
 
 package model
 
-type CreateDeviceInput struct {
-	DeviceTypeID int            `json:"deviceTypeID"`
-	DeviceInputs []*DeviceInput `json:"deviceInputs"`
+type Dashboard struct {
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	DeviceTotal  int    `json:"deviceTotal"`
+	RunningTotal int    `json:"runningTotal"`
+	ErrorTotal   int    `json:"errorTotal"`
 }
 
 type DashboardWrap struct {
 	Total      int          `json:"total"`
 	Dashboards []*Dashboard `json:"dashboards"`
-}
-
-type DeviceInput struct {
-	Number  string  `json:"number"`
-	Mac     string  `json:"mac"`
-	Address *string `json:"address"`
-}
-
-type DeviceTypeWrap struct {
-	Total int           `json:"total"`
-	Types []*DeviceType `json:"types"`
-}
-
-type DeviceWrap struct {
-	Total   int       `json:"total"`
-	Devices []*Device `json:"devices"`
-}
-
-type ErrorCode struct {
-	ID     int      `json:"id"`
-	Errors []string `json:"errors"`
-}
-
-type User struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
 }

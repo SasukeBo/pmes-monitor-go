@@ -1,13 +1,3 @@
 type Query {
-   hello(name: String!): String!
-
-   # admin apis
-   "获取机种列表"
-   adminDeviceTypes(search: String, page: Int!, limit: Int!): DeviceTypeWrap!
-   "ID查询机种"
-   adminDeviceType(id: Int!): DeviceType!
-   "获取设备列表"
-   adminDevices(search: String, page: Int!, limit: Int!): DeviceWrap!
-   "获取看板列表"
-   adminDashboards(search: String, page: Int!, limit: Int!): DashboardWrap!
+    dashboards(search: String, limit: Int!, page: Int!): DashboardWrap!
 }

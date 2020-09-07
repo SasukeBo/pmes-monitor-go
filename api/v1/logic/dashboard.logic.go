@@ -5,64 +5,75 @@ import (
 	"fmt"
 	"github.com/SasukeBo/pmes-device-monitor/api/v1/model"
 	"github.com/SasukeBo/pmes-device-monitor/orm"
-	"github.com/SasukeBo/pmes-device-monitor/orm/types"
-	"github.com/jinzhu/copier"
 	"strconv"
 )
 
-func AdminCreateDashboard(ctx context.Context, name string, deviceIDs []int) (string, error) {
-	var dashboard = orm.Dashboard{Name: name}
-	var ids = make(types.Map)
-	ids["deviceIDs"] = deviceIDs
-	dashboard.DeviceIDs = ids
-	if err := orm.Create(&dashboard).Error; err != nil {
-		return "", err
-	}
-
-	return "ok", nil
-}
-
-func AdminDashboards(ctx context.Context, search *string, page int, limit int) (*model.DashboardWrap, error) {
+func Dashboards(ctx context.Context, search *string, limit int, page int) (*model.DashboardWrap, error) {
 	var query = orm.Model(&orm.Dashboard{})
+
 	if search != nil {
 		query = query.Where("name LIKE ?", fmt.Sprintf("%%%s%%", *search))
 	}
 
-	var ds []orm.Dashboard
-	if err := query.Limit(limit).Offset((page - 1) * limit).Find(&ds).Error; err != nil {
+	var dashboards []orm.Dashboard
+	if err := query.Limit(limit).Offset((page - 1) * limit).Find(&dashboards).Error; err != nil {
 		return nil, err
 	}
 
-	var count int
-	if err := query.Count(&count).Error; err != nil {
+	var total int
+	if err := query.Count(&total).Error; err != nil {
 		return nil, err
 	}
 
 	var outs []*model.Dashboard
-	for _, d := range ds {
-		var out model.Dashboard
-		if value, ok := d.DeviceIDs["deviceIDs"]; ok {
-			if ids, ok := value.([]interface{}); ok {
-				var deviceIDs []int
-				for _, v := range ids {
-					id, err := strconv.Atoi(fmt.Sprint(v))
+	for _, d := range dashboards {
+		var out = model.Dashboard{
+			ID:   int(d.ID),
+			Name: d.Name,
+		}
+		outs = append(outs, &out)
+
+		var deviceIDs []int
+		if v, ok := d.DeviceIDs["deviceIDs"]; ok {
+			if items, ok := v.([]interface{}); ok {
+				for _, item := range items {
+					id, err := strconv.Atoi(fmt.Sprint(item))
 					if err != nil {
 						continue
 					}
 					deviceIDs = append(deviceIDs, id)
 				}
-				out.DeviceIDs = deviceIDs
 			}
 		}
-		if err := copier.Copy(&out, &d); err != nil {
+
+		out.DeviceTotal = len(deviceIDs)
+		if out.DeviceTotal == 0 {
 			continue
 		}
 
-		outs = append(outs, &out)
+		sql := orm.Model(&orm.Device{}).Select("count(id), devices.status").Where("id in (?)", deviceIDs)
+		rows, err := sql.Group("devices.status").Rows()
+		if err != nil {
+			continue
+		}
+
+		for rows.Next() {
+			var count, status int
+			if err := rows.Scan(&count, &status); err != nil {
+				continue
+			}
+
+			if status == orm.DeviceStatusRunning {
+				out.RunningTotal = count
+			}
+			if status == orm.DeviceStatusError {
+				out.ErrorTotal = count
+			}
+		}
 	}
 
 	return &model.DashboardWrap{
-		Total:      count,
+		Total:      total,
 		Dashboards: outs,
 	}, nil
 }

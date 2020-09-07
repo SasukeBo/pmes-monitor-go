@@ -45,7 +45,8 @@ func init() {
 		&Device{},
 		&Attachment{},
 		&DeviceErrorLog{},
-		&ProduceLog{},
+		&DeviceProduceLog{},
+		&DeviceStatusLog{},
 		&DeviceType{},
 	).Error
 	if err != nil {

@@ -9,8 +9,10 @@ import (
 )
 
 //var host = "tcp://192.168.9.135:1883"
-//var host = "tcp://localhost:1883"
-var host = "tcp://192.168.9.93:44765"
+var host = "tcp://localhost:44765"
+
+//var host = "tcp://192.168.9.93:44765"
+//var host = "tcp://192.168.5.146:1883"
 
 func TestConnect(t *testing.T) {
 	c := &service.Client{}
@@ -18,7 +20,7 @@ func TestConnect(t *testing.T) {
 	c.Connect(host, connMsg)
 
 	subMsg := message.NewSubscribeMessage()
-	subMsg.AddTopic([]byte("abc1"), message.QosAtMostOnce)
+	subMsg.AddTopic([]byte("PLC"), message.QosAtMostOnce)
 	c.Subscribe(subMsg, nil, func(msg *message.PublishMessage) error {
 		fmt.Printf("%s: %s\n", string(msg.Topic()), string(msg.Payload()))
 		return nil
@@ -36,10 +38,22 @@ func TestMQTTSend(t *testing.T) {
 	}
 
 	pubMsg := message.NewPublishMessage()
-	pubMsg.SetTopic([]byte("abc1"))
+	pubMsg.SetTopic([]byte("JAHKHKLHFLDHFHDS"))
 	pubMsg.SetPayload([]byte("hello world\n"))
 	for i := 0; i < 30; i++ {
 		c.Publish(pubMsg, nil)
 		<-time.After(time.Second)
 	}
+}
+
+func TestHandleMessage(t *testing.T) {
+	// 92 46
+	// 58528af7ff84 0011 0375 0000 0000 0000 0000 00f0 0000 0000 0000 0000000000000000000000000000000000000000
+	handleMessage("58528af7ff8400210375000000000000000000f00000000000000000000000000000000000000000000000000000")
+}
+
+func TestWordsToErrorIdxs(t *testing.T) {
+	words, _ := hexToWords("00f0f000")
+	idxs := wordsToErrorIdxs(words)
+	fmt.Println(idxs)
 }

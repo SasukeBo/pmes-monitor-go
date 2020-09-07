@@ -6,9 +6,9 @@ package resolver
 import (
 	"context"
 
-	"github.com/SasukeBo/pmes-device-monitor/api/v1/generated"
-	"github.com/SasukeBo/pmes-device-monitor/api/v1/logic"
-	"github.com/SasukeBo/pmes-device-monitor/api/v1/model"
+	"github.com/SasukeBo/pmes-device-monitor/api/v1/admin/generated"
+	"github.com/SasukeBo/pmes-device-monitor/api/v1/admin/logic"
+	"github.com/SasukeBo/pmes-device-monitor/api/v1/admin/model"
 )
 
 func (r *dashboardResolver) Devices(ctx context.Context, obj *model.Dashboard) ([]*model.Device, error) {

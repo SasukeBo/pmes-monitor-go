@@ -4,10 +4,20 @@ import (
 	"bytes"
 	"context"
 	"github.com/99designs/gqlgen/graphql/handler"
+	v1admingenerated "github.com/SasukeBo/pmes-device-monitor/api/v1/admin/generated"
+	v1adminresolver "github.com/SasukeBo/pmes-device-monitor/api/v1/admin/resolver"
 	v1generated "github.com/SasukeBo/pmes-device-monitor/api/v1/generated"
 	v1resolver "github.com/SasukeBo/pmes-device-monitor/api/v1/resolver"
 	"github.com/gin-gonic/gin"
 )
+
+func API1Admin() gin.HandlerFunc {
+	h := handler.NewDefaultServer(v1admingenerated.NewExecutableSchema(v1admingenerated.Config{Resolvers: &v1adminresolver.Resolver{}}))
+
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	}
+}
 
 func API1() gin.HandlerFunc {
 	h := handler.NewDefaultServer(v1generated.NewExecutableSchema(v1generated.Config{Resolvers: &v1resolver.Resolver{}}))
