@@ -7,6 +7,7 @@ import (
 	"github.com/SasukeBo/log"
 	"github.com/SasukeBo/pmes-device-monitor/orm"
 	"math"
+	"strings"
 )
 
 const (
@@ -37,7 +38,12 @@ func handleMessage(payload string) {
 }
 
 func analyzeMessage(msg string) (mac string, status int, total int, ng int, errorIndex []int, err error) {
-	words, err := hexToWords(msg)
+	defer func() {
+		if err := recover(); err != nil {
+			log.Error("analyzeMessage %s\n failed: %v\n", msg, err)
+		}
+	}()
+	words, err := hexToWords(strings.TrimSpace(msg))
 	if err != nil {
 		return
 	}
@@ -119,10 +125,12 @@ func wordsToMAC(words [][]byte) string {
 }
 
 func hexToWords(hexStr string) ([][]byte, error) {
-	fmt.Println(hexStr)
 	var length = len(hexStr)
 	var words [][]byte
 	for i := 0; i < length; i = i + 4 {
+		if length < i+4 {
+			break
+		}
 		word, err := hex.DecodeString(hexStr[i : i+4])
 		if err != nil {
 			return words, err
