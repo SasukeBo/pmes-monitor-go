@@ -10,10 +10,10 @@ import (
 )
 
 //var host = "tcp://192.168.9.135:1883"
-var host = "tcp://localhost:44765"
+//var host = "tcp://localhost:44765"
 
 //var host = "tcp://192.168.9.93:44765"
-//var host = "tcp://192.168.5.146:1883"
+var host = "tcp://192.168.5.146:1883"
 
 func TestConnect(t *testing.T) {
 	c := &service.Client{}

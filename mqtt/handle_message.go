@@ -119,6 +119,7 @@ func wordsToMAC(words [][]byte) string {
 }
 
 func hexToWords(hexStr string) ([][]byte, error) {
+	fmt.Println(hexStr)
 	var length = len(hexStr)
 	var words [][]byte
 	for i := 0; i < length; i = i + 4 {
