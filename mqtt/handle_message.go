@@ -21,9 +21,8 @@ const (
 var ErrIllegalPayload = errors.New("illegal payload length")
 
 func handleMessage(payload string) {
-	fmt.Printf("handle message: %s\n", payload)
 	payload = strings.TrimSpace(payload)
-	if len(payload) < 12 {
+	if len(payload) < 52 {
 		log.Errorln(ErrIllegalPayload)
 		return
 	}
@@ -42,9 +41,9 @@ func handleMessage(payload string) {
 	}
 
 	var produceLog orm.DeviceProduceLog
-	produceLog.Record(mac, total, ng)
+	produceLog.Record(&device, total, ng)
 	var statusLog orm.DeviceStatusLog
-	statusLog.Record(mac, status, errorIndex)
+	statusLog.Record(&device, status, errorIndex)
 }
 
 func analyzeMessage(msg string) (status int, total int, ng int, errorIndex []int, err error) {
@@ -70,8 +69,8 @@ func analyzeMessage(msg string) (status int, total int, ng int, errorIndex []int
 	// 不良
 	ng = wordsToAmount(words[3:5])
 
-	if len(words) > 5 {
-		errorIndex = wordsToErrorIdxs(words[5:])
+	if len(words) > 10 {
+		errorIndex = wordsToErrorIdxs(words[10:])
 	}
 	return
 }
@@ -121,7 +120,6 @@ func wordToStatus(word []byte) int {
 		status = orm.DeviceStatusShutdown
 		fmt.Println("status: Offline")
 	}
-
 	return status
 }
 

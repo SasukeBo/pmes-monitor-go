@@ -5,14 +5,18 @@ package resolver
 
 import (
 	"context"
-	"github.com/SasukeBo/pmes-device-monitor/api/v1/logic"
 
 	"github.com/SasukeBo/pmes-device-monitor/api/v1/generated"
+	"github.com/SasukeBo/pmes-device-monitor/api/v1/logic"
 	"github.com/SasukeBo/pmes-device-monitor/api/v1/model"
 )
 
 func (r *queryResolver) Dashboards(ctx context.Context, search *string, limit int, page int) (*model.DashboardWrap, error) {
 	return logic.Dashboards(ctx, search, limit, page)
+}
+
+func (r *queryResolver) DashboardDevices(ctx context.Context, id int) ([]*model.DashboardDevice, error) {
+	return logic.DashboardDevices(ctx, id)
 }
 
 // Query returns generated.QueryResolver implementation.

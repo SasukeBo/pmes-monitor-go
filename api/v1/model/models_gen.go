@@ -10,6 +10,16 @@ type Dashboard struct {
 	ErrorTotal   int    `json:"errorTotal"`
 }
 
+type DashboardDevice struct {
+	ID        int      `json:"id"`
+	Number    string   `json:"number"`
+	Status    string   `json:"status"`
+	Total     int      `json:"total"`
+	Ng        int      `json:"ng"`
+	Durations []int    `json:"durations"`
+	Errors    []string `json:"errors"`
+}
+
 type DashboardWrap struct {
 	Total      int          `json:"total"`
 	Dashboards []*Dashboard `json:"dashboards"`

@@ -12,13 +12,12 @@ func Start() {
 	r := gin.Default()
 	r.Use(gin.Recovery())
 
-	r.POST("/monitor/file/posts", handler.Post()) // 上传文件
-
 	//  API v1
 	api1 := r.Group("/monitor/api", handler.HttpRequestLogger(), handler.InjectGinContext())
 	{
 		api1.POST("v1/admin", handler.API1Admin())
 		api1.POST("v1", handler.API1())
+		api1.POST("v1/import_error_codes", handler.ImportCodes()) // 上传错误代码
 	}
 
 	var port = configer.GetString("service_port")

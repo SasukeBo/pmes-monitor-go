@@ -6,6 +6,7 @@ import (
 	"github.com/SasukeBo/pmes-device-monitor/api/v1/model"
 	"github.com/SasukeBo/pmes-device-monitor/orm"
 	"strconv"
+	"time"
 )
 
 func Dashboards(ctx context.Context, search *string, limit int, page int) (*model.DashboardWrap, error) {
@@ -34,7 +35,7 @@ func Dashboards(ctx context.Context, search *string, limit int, page int) (*mode
 		outs = append(outs, &out)
 
 		var deviceIDs []int
-		if v, ok := d.DeviceIDs["deviceIDs"]; ok {
+		if v, ok := d.DeviceIDs[orm.DashboardDeviceIDsMapKey]; ok {
 			if items, ok := v.([]interface{}); ok {
 				for _, item := range items {
 					id, err := strconv.Atoi(fmt.Sprint(item))
@@ -76,4 +77,88 @@ func Dashboards(ctx context.Context, search *string, limit int, page int) (*mode
 		Total:      total,
 		Dashboards: outs,
 	}, nil
+}
+
+func DashboardDevices(ctx context.Context, id int) ([]*model.DashboardDevice, error) {
+	var board orm.Dashboard
+	if err := board.Get(id); err != nil {
+		return nil, err
+	}
+
+	var deviceIDs []int
+	if v, ok := board.DeviceIDs[orm.DashboardDeviceIDsMapKey]; ok {
+		if vs, ok := v.([]interface{}); ok {
+			for _, item := range vs {
+				id, err := strconv.Atoi(fmt.Sprint(item))
+				if err != nil {
+					continue
+				}
+				deviceIDs = append(deviceIDs, id)
+			}
+		}
+	}
+
+	return realtimeDeviceAnalyze(deviceIDs)
+}
+
+func realtimeDeviceAnalyze(ids []int) ([]*model.DashboardDevice, error) {
+	var outs []*model.DashboardDevice
+	var now = time.Now()
+	var today = time.Date(now.Year(), now.Month(), now.Day(), -8, 0, 0, 0, time.UTC)
+	for _, id := range ids {
+		var device orm.Device
+		if err := device.Get(id); err != nil {
+			continue
+		}
+
+		var out = model.DashboardDevice{
+			ID:     int(device.ID),
+			Number: device.Number,
+			Status: device.GetStatusString(),
+		}
+
+		// 统计产量
+		orm.Model(orm.DeviceProduceLog{}).Where(
+			"device_id = ? AND created_at > ?", id, today,
+		).Select("SUM(total) as total, SUM(ng) as ng").Scan(&out)
+
+		var durations = []int{0, 0, 0, 0}
+		rows, err := orm.Model(orm.DeviceStatusLog{}).Where(
+			"device_id = ? AND created_at > ?", id, today,
+		).Select("SUM(duration), device_status_logs.status").Group("device_status_logs.status").Rows()
+		if err == nil {
+			var sum, status int
+			for rows.Next() {
+				if err := rows.Scan(&sum, &status); err != nil {
+					continue
+				}
+				if status < 4 {
+					durations[status] = sum
+				}
+			}
+		}
+		out.Durations = durations
+
+		var messages []string
+		if device.Status == orm.DeviceStatusError {
+			var errorCode = device.GetErrorCode()
+			msgs := errorCode.GetErrors()
+
+			var errLog orm.DeviceStatusLog
+			var idxs []int
+			if err := errLog.GetLastError(id); err == nil {
+				idxs = errLog.GetErrorIdxs()
+			}
+
+			for _, idx := range idxs {
+				if idx < len(msgs) {
+					messages = append(messages, msgs[idx])
+				}
+			}
+		}
+		out.Errors = messages
+		outs = append(outs, &out)
+	}
+
+	return outs, nil
 }

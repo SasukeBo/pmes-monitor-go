@@ -18,7 +18,7 @@ func AdminSaveErrorCode(ctx context.Context, id int, errors []string) (string, e
 	}
 
 	var errs = make(types.Map)
-	errs["messages"] = errors
+	errs[orm.DeviceErrorCodeErrorsMapKey] = errors
 	ec.Errors = errs
 	if err := orm.Save(&ec).Error; err != nil {
 		return "", err
@@ -29,7 +29,7 @@ func AdminSaveErrorCode(ctx context.Context, id int, errors []string) (string, e
 
 func AdminDeviceTypeAddErrorCode(ctx context.Context, deviceTypeID int, errors []string) (string, error) {
 	var errs = make(types.Map)
-	errs["messages"] = errors
+	errs[orm.DeviceErrorCodeErrorsMapKey] = errors
 	var errorCode = orm.DeviceErrorCode{
 		Errors: errs,
 	}
@@ -171,7 +171,7 @@ func LoadErrorCode(ctx context.Context, id int) *model.ErrorCode {
 		return nil
 	}
 	errMap := ec.Errors
-	if value, ok := errMap["messages"]; ok {
+	if value, ok := errMap[orm.DeviceErrorCodeErrorsMapKey]; ok {
 		log.Infoln(value)
 		if errs, ok := value.([]interface{}); ok {
 			var errStr []string

@@ -1,0 +1,9 @@
+type DashboardDevice {
+    id: Int!
+    number: String!
+    status: String!
+    total: Int!
+    ng: Int!
+    durations: [Int!]!
+    errors: [String!]!
+}

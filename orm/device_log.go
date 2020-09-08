@@ -8,6 +8,7 @@ import (
 	"github.com/SasukeBo/pmes-device-monitor/orm/types"
 	"github.com/jinzhu/copier"
 	"github.com/jinzhu/gorm"
+	"strconv"
 	"time"
 )
 
@@ -43,18 +44,14 @@ func (dpl *DeviceProduceLog) GetLast(mac string) error {
 	return nil
 }
 
-func (dpl *DeviceProduceLog) Record(mac string, ct, cn int) error {
-	var key = fmt.Sprintf("%s-last-dpl", mac)
-	var device Device
-	if err := device.GetByMAC(mac); err != nil {
-		return err
-	}
+func (dpl *DeviceProduceLog) Record(device *Device, ct, cn int) error {
+	var key = fmt.Sprintf("%s-last-dpl", device.Mac)
 	dpl.DeviceID = device.ID
 	dpl.CurrentNG = cn
 	dpl.CurrentTotal = ct
 
 	var last DeviceProduceLog
-	if err := last.GetLast(mac); err != nil {
+	if err := last.GetLast(device.Mac); err != nil {
 		dpl.NG = cn
 		dpl.Total = ct
 	} else {
@@ -90,6 +87,27 @@ type DeviceStatusLog struct {
 	Duration  int       `gorm:"COMMENT:'持续时间';column:duration;default:0"`
 }
 
+func (dsl *DeviceStatusLog) GetErrorIdxs() []int {
+	var idxs []int
+	if v, ok := dsl.ErrorIdxs[ErrorIdxsKey]; ok {
+		if vs, ok := v.([]interface{}); ok {
+			for item, _ := range vs {
+				idx, err := strconv.Atoi(fmt.Sprint(item))
+				if err != nil {
+					continue
+				}
+				idxs = append(idxs, idx)
+			}
+		}
+	}
+
+	return idxs
+}
+
+func (dsl *DeviceStatusLog) GetLastError(deviceID int) error {
+	return Model(dsl).Where("device_id = ? AND status = ?", deviceID, DeviceStatusError).Order("created_at desc").First(dsl).Error
+}
+
 func (dsl *DeviceStatusLog) GetLast(mac string) error {
 	var key = fmt.Sprintf("%s-last-dsl", mac)
 
@@ -110,8 +128,9 @@ func (dsl *DeviceStatusLog) GetLast(mac string) error {
 	return nil
 }
 
-func (dsl *DeviceStatusLog) Record(mac string, status int, errors []int) error {
+func (dsl *DeviceStatusLog) Record(device *Device, status int, errors []int) error {
 	dsl.Status = status
+	dsl.DeviceID = device.ID
 	if status == DeviceStatusError {
 		em := make(types.Map)
 		em[ErrorIdxsKey] = errors
@@ -119,29 +138,22 @@ func (dsl *DeviceStatusLog) Record(mac string, status int, errors []int) error {
 	}
 
 	var last DeviceStatusLog
-	if err := last.GetLast(mac); err == nil {
+	if err := last.GetLast(device.Mac); err == nil {
 		if last.Status == status { // 状态未改变，不进行任何操作
 			return nil
 		}
 		var now = time.Now()
 		last.Duration = int(now.Sub(last.CreatedAt) / time.Second)
 		Save(&last)
-
-		dsl.DeviceID = last.DeviceID
-	} else {
-		var device Device
-		if err := device.GetByMAC(mac); err != nil {
-			return err
-		}
-
-		dsl.DeviceID = device.ID
 	}
 
 	if err := Create(dsl).Error; err != nil {
 		return err
 	}
+	device.Status = status
+	Save(&device)
 
-	var key = fmt.Sprintf("%s-last-dsl", mac)
+	var key = fmt.Sprintf("%s-last-dsl", device.Mac)
 	cache.Put(key, dsl)
 	return nil
 }

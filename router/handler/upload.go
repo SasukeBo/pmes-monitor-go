@@ -1,51 +1,43 @@
 package handler
 
 import (
+	"bytes"
+	"github.com/SasukeBo/pmes-device-monitor/errormap"
 	"github.com/gin-gonic/gin"
-	//"path/filepath"
+	"github.com/tealeg/xlsx/v3"
+	"io"
+	"net/http"
 )
 
-func Post() gin.HandlerFunc {
+func ImportCodes() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		//post, err := c.FormFile("file")
-		//if err != nil {
-		//	errormap.SendHttpError(c, errormap.ErrorCodeFileUploadError, err)
-		//	return
-		//}
-		//
-		//dst := configer.GetString("file_cache_path")
-		//token, err := uuid.NewRandom()
-		//if err != nil {
-		//	errormap.SendHttpError(c, errormap.ErrorCodeFileUploadError, err)
-		//	return
-		//}
-		//
-		//var relevantPath = filepath.Join(orm.DirUpload, token.String())
-		//path := filepath.Join(dst, relevantPath)
-		//err = c.SaveUploadedFile(post, path)
-		//if err != nil {
-		//	errormap.SendHttpError(c, errormap.ErrorCodeFileUploadError, err)
-		//	return
-		//}
-		//
-		//fmt.Println(post.Filename, post.Size, post.Header)
-		//
-		//file := orm.Attachment{
-		//	Name:        post.Filename,
-		//	Path:        relevantPath,
-		//	Token:       token.String(),
-		//	ContentType: post.Header["Content-Type"][0],
-		//}
-		//err = orm.Create(&file).Error
-		//if err != nil {
-		//	errormap.SendHttpError(c, errormap.ErrorCodeCreateObjectError, err, "file")
-		//	return
-		//}
-		//
-		//c.JSON(http.StatusOK, map[string]interface{}{
-		//	"token": file.Token,
-		//})
-		return
+		file, _, err := c.Request.FormFile("file")
+		if err != nil {
+			errormap.SendHttpError(c, errormap.ErrorCodeFileUploadError, err)
+			return
+		}
+		defer file.Close()
+
+		buf := bytes.NewBuffer(nil)
+		if _, err := io.Copy(buf, file); err != nil {
+			errormap.SendHttpError(c, errormap.ErrorCodeFileUploadError, err)
+			return
+		}
+
+		xf, err := xlsx.OpenBinary(buf.Bytes())
+		if err != nil {
+			errormap.SendHttpError(c, errormap.ErrorCodeFileExtensionError, err, ".xlsx")
+			return
+		}
+
+		sheet := xf.Sheets[0]
+		var messages []string
+		sheet.ForEachRow(func(r *xlsx.Row) error {
+			messages = append(messages, r.GetCell(0).String())
+			return nil
+		})
+
+		c.JSON(http.StatusOK, messages)
 	}
 }
 
