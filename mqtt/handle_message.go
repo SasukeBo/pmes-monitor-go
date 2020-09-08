@@ -18,15 +18,25 @@ const (
 	deviceStatusStoppedWithError = 33
 )
 
+var ErrIllegalPayload = errors.New("illegal payload length")
+
 func handleMessage(payload string) {
 	fmt.Printf("handle message: %s\n", payload)
-	mac, status, total, ng, errorIndex, err := analyzeMessage(payload)
-	if err != nil {
+	payload = strings.TrimSpace(payload)
+	if len(payload) < 12 {
+		log.Errorln(ErrIllegalPayload)
+		return
+	}
+
+	mac := payload[0:12]
+	var device orm.Device
+	if err := device.GetByMAC(mac); err != nil {
 		log.Errorln(err)
 		return
 	}
-	var device orm.Device
-	if err := device.GetByMAC(mac); err != nil {
+
+	status, total, ng, errorIndex, err := analyzeMessage(payload[12:])
+	if err != nil {
 		log.Errorln(err)
 		return
 	}
@@ -37,24 +47,22 @@ func handleMessage(payload string) {
 	statusLog.Record(mac, status, errorIndex)
 }
 
-func analyzeMessage(msg string) (mac string, status int, total int, ng int, errorIndex []int, err error) {
+func analyzeMessage(msg string) (status int, total int, ng int, errorIndex []int, err error) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Error("analyzeMessage %s\n failed: %v\n", msg, err)
 		}
 	}()
-	words, err := hexToWords(strings.TrimSpace(msg))
+	words, err := hexToWords(msg)
 	if err != nil {
 		return
 	}
 
 	if len(words) < 8 {
-		err = errors.New("illegal payload length")
+		err = ErrIllegalPayload
 		return
 	}
 
-	// mac
-	mac = wordsToMAC(words[0:3])
 	// 状态
 	status = wordToStatus(words[3])
 	// 产量
@@ -115,13 +123,6 @@ func wordToStatus(word []byte) int {
 	}
 
 	return status
-}
-
-func wordsToMAC(words [][]byte) string {
-	if len(words) < 3 {
-		return ""
-	}
-	return fmt.Sprintf("%s%s%s", hex.EncodeToString(words[0]), hex.EncodeToString(words[1]), hex.EncodeToString(words[2]))
 }
 
 func hexToWords(hexStr string) ([][]byte, error) {
