@@ -43,8 +43,6 @@ func init() {
 		&Dashboard{},
 		&DeviceErrorCode{},
 		&Device{},
-		&Attachment{},
-		&DeviceErrorLog{},
 		&DeviceProduceLog{},
 		&DeviceStatusLog{},
 		&DeviceType{},
@@ -54,7 +52,7 @@ func init() {
 	}
 
 	if env != "test" && env != "TEST" {
-		tableNames := []string{"device_errors", "devices", "attachments", "device_error_logs", "produce_logs"}
+		tableNames := []string{"dashboards", "device_error_codes", "devices", "device_produce_logs", "device_status_logs", "device_types"}
 		setupUTF8GeneralCI(tableNames)
 	}
 	setupIndex()

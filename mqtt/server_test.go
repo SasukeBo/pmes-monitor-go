@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/surgemq/message"
 	"github.com/surgemq/surgemq/service"
+	"strings"
 	"testing"
 	"time"
 )
@@ -38,18 +39,18 @@ func TestMQTTSend(t *testing.T) {
 	}
 
 	pubMsg := message.NewPublishMessage()
-	pubMsg.SetTopic([]byte("JAHKHKLHFLDHFHDS"))
-	pubMsg.SetPayload([]byte("hello world\n"))
-	for i := 0; i < 30; i++ {
-		c.Publish(pubMsg, nil)
-		<-time.After(time.Second)
-	}
+	pubMsg.SetTopic([]byte("PLC"))
+	//             mac 			sta  total 	   ng        error codes
+	var message = "58528af7ff84 0010 0040 0000 0001 0000 0000 1000 0008 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000"
+	pubMsg.SetPayload([]byte(strings.ReplaceAll(message, " ", "")))
+	c.Publish(pubMsg, nil)
 }
 
 func TestHandleMessage(t *testing.T) {
 	// 92 46
-	// 58528af7ff84 0011 0375 0000 0000 0000 0000 00f0 0000 0000 0000 0000000000000000000000000000000000000000
-	handleMessage("58528af7ff8400210375000000000000000000f00000000000000000000000000000000000000000000000000000")
+	// 58528af7ff84 0011 0375 0000 0000 0000 0010 00f0 0000 0000 0000 0000000000000000000000000000000000000000
+	var message = "58528af7ff84 0020 1faa 0000 00b1 0000 0000 0000 0000 0004 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000"
+	handleMessage(strings.ReplaceAll(message, " ", ""))
 }
 
 func TestWordsToErrorIdxs(t *testing.T) {

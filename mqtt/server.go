@@ -1,15 +1,12 @@
 package mqtt
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/SasukeBo/configer"
 	"github.com/SasukeBo/log"
-	"github.com/SasukeBo/pmes-device-monitor/orm"
 	"github.com/surgemq/message"
 	"github.com/surgemq/surgemq/service"
-	"math"
 	"time"
 )
 
@@ -146,127 +143,4 @@ func setHeartBeat() error {
 
 func init() {
 	uri = fmt.Sprintf("tcp://0.0.0.0:%s", configer.GetString("mqtt_port"))
-}
-
-const (
-	deviceStatusRunning          = 16
-	deviceStatusStopped          = 17
-	deviceStatusRunningWithError = 18
-	deviceStatusOffline          = 32
-	deviceStatusStoppedWithError = 33
-)
-
-func handleMessage(payload string) {
-	words, err := hexToWords(payload)
-	if err != nil {
-		log.Errorln(err)
-		return
-	}
-	fmt.Printf("words: %v\n", words)
-
-	if len(words) < 8 {
-		log.Errorln("Illegal payload length.")
-		return
-	}
-
-	// mac
-	mac := wordsToMAC(words[0:3])
-	fmt.Printf("mac: %v\n", mac)
-	// 状态
-	status := wordToStatus(words[3])
-	fmt.Println(status, words[3])
-	// 产量
-	total := wordsToAmount(words[4:6])
-	fmt.Printf("产量：%v\n", total)
-	// 不良
-	ng := wordsToAmount(words[6:8])
-	fmt.Printf("不良：%v\n", ng)
-
-	var errorIndex []int
-	if len(words) > 8 {
-		errorIndex = wordsToErrorIdxs(words[8:])
-	}
-	fmt.Printf("故障信息编号：%v\n", errorIndex)
-}
-
-func wordsToErrorIdxs(words [][]byte) []int {
-	var idxs []int
-	fmt.Println(words)
-	for i, word := range words {
-		j := bytesToInt(word)
-		if j == 0 {
-			continue
-		}
-		for k := 0; k < 16; k++ {
-			compare := int(math.Pow(2, float64(k)))
-			if j&compare == compare {
-				idxs = append(idxs, i*16+k)
-			}
-		}
-	}
-
-	return idxs
-}
-
-func wordsToAmount(words [][]byte) int {
-	if len(words) != 2 {
-		return 0
-	}
-	var amountBytes []byte
-	amountBytes = append(amountBytes, words[1]...)
-	amountBytes = append(amountBytes, words[0]...)
-	return bytesToInt(amountBytes)
-}
-
-func wordToStatus(word []byte) int {
-	statusCode := bytesToInt(word)
-	var status int
-	switch statusCode {
-	case deviceStatusRunning:
-		status = orm.DeviceStatusRunning
-		fmt.Println("status: Running")
-	case deviceStatusStopped:
-		status = orm.DeviceStatusStopped
-		fmt.Println("status: Stopped")
-	case deviceStatusStoppedWithError, deviceStatusRunningWithError:
-		status = orm.DeviceStatusError
-		fmt.Println("status: Error")
-	case deviceStatusOffline:
-		status = orm.DeviceStatusShutdown
-		fmt.Println("status: Offline")
-	}
-
-	return status
-}
-
-func wordsToMAC(words [][]byte) string {
-	if len(words) < 3 {
-		return ""
-	}
-	return fmt.Sprintf("%s%s%s", hex.EncodeToString(words[0]), hex.EncodeToString(words[1]), hex.EncodeToString(words[2]))
-}
-
-func hexToWords(hexStr string) ([][]byte, error) {
-	var length = len(hexStr)
-	var words [][]byte
-	for i := 0; i < length; i = i + 4 {
-		word, err := hex.DecodeString(hexStr[i : i+4])
-		if err != nil {
-			return words, err
-		}
-
-		words = append(words, word)
-	}
-
-	return words, nil
-}
-
-func bytesToInt(bytes []byte) int {
-	var result int
-	var length = len(bytes)
-	for i := 0; i < length; i++ {
-		result = result + int(bytes[i])*int(math.Pow(16*16, float64(length-i-1)))
-	}
-
-	return result
 }

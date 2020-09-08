@@ -3,7 +3,10 @@ package orm
 // 监测设备
 
 import (
+	"fmt"
+	"github.com/SasukeBo/pmes-device-monitor/cache"
 	"github.com/SasukeBo/pmes-device-monitor/orm/types"
+	"github.com/jinzhu/copier"
 	"github.com/jinzhu/gorm"
 )
 
@@ -22,6 +25,27 @@ type Device struct {
 	Address      string `gorm:"COMMENT:'物理地址';"`
 	Status       int    `gorm:"COMMENT:'设备状态';default:0"`
 	//UserID       int    `gorm:"COMMENT:'创建人';column:user_id;not null"`
+}
+
+func (d *Device) GetByMAC(mac string) error {
+	cacheKey := fmt.Sprintf("%s-device", mac)
+	v := cache.Get(cacheKey)
+	if v != nil {
+		device, ok := v.(*Device)
+		if ok {
+			if err := copier.Copy(d, device); err == nil {
+				fmt.Printf("get device: %s from cache\n", d.Number)
+				return nil
+			}
+		}
+	}
+
+	if err := Model(d).Where("mac = ?", mac).First(d).Error; err != nil {
+		return err
+	}
+
+	cache.Put(cacheKey, d)
+	return nil
 }
 
 type DeviceType struct {
