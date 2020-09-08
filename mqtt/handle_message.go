@@ -58,20 +58,20 @@ func analyzeMessage(msg string) (status int, total int, ng int, errorIndex []int
 		return
 	}
 
-	if len(words) < 8 {
+	if len(words) < 5 {
 		err = ErrIllegalPayload
 		return
 	}
 
 	// 状态
-	status = wordToStatus(words[3])
+	status = wordToStatus(words[0])
 	// 产量
-	total = wordsToAmount(words[4:6])
+	total = wordsToAmount(words[1:3])
 	// 不良
-	ng = wordsToAmount(words[6:8])
+	ng = wordsToAmount(words[3:5])
 
-	if len(words) > 8 {
-		errorIndex = wordsToErrorIdxs(words[8:])
+	if len(words) > 5 {
+		errorIndex = wordsToErrorIdxs(words[5:])
 	}
 	return
 }
