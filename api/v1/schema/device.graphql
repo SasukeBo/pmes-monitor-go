@@ -6,4 +6,21 @@ type DashboardDevice {
     ng: Int!
     durations: [Int!]!
     errors: [String!]!
+    lastProduceLogID: Int!
+    lastStatusLogID: Int!
+}
+
+type DeviceProduceLog {
+    id: Int!
+    deviceID: Int!
+    total: Int!
+    ng: Int!
+}
+
+type DeviceStatusLog {
+    id: Int!
+    deviceID: Int!
+    messages: [String!]!
+    status: String!
+    duration: Int!
 }

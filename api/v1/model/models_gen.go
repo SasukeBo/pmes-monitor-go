@@ -11,16 +11,40 @@ type Dashboard struct {
 }
 
 type DashboardDevice struct {
-	ID        int      `json:"id"`
-	Number    string   `json:"number"`
-	Status    string   `json:"status"`
-	Total     int      `json:"total"`
-	Ng        int      `json:"ng"`
-	Durations []int    `json:"durations"`
-	Errors    []string `json:"errors"`
+	ID               int      `json:"id"`
+	Number           string   `json:"number"`
+	Status           string   `json:"status"`
+	Total            int      `json:"total"`
+	Ng               int      `json:"ng"`
+	Durations        []int    `json:"durations"`
+	Errors           []string `json:"errors"`
+	LastProduceLogID int      `json:"lastProduceLogID"`
+	LastStatusLogID  int      `json:"lastStatusLogID"`
+}
+
+type DashboardDeviceFreshResponse struct {
+	ProduceLogs      []*DeviceProduceLog `json:"produceLogs"`
+	StatusLogs       []*DeviceStatusLog  `json:"statusLogs"`
+	LastProduceLogID int                 `json:"lastProduceLogID"`
+	LastStatusLogID  int                 `json:"lastStatusLogID"`
 }
 
 type DashboardWrap struct {
 	Total      int          `json:"total"`
 	Dashboards []*Dashboard `json:"dashboards"`
+}
+
+type DeviceProduceLog struct {
+	ID       int `json:"id"`
+	DeviceID int `json:"deviceID"`
+	Total    int `json:"total"`
+	Ng       int `json:"ng"`
+}
+
+type DeviceStatusLog struct {
+	ID       int      `json:"id"`
+	DeviceID int      `json:"deviceID"`
+	Messages []string `json:"messages"`
+	Status   string   `json:"status"`
+	Duration int      `json:"duration"`
 }

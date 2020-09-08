@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/SasukeBo/pmes-device-monitor/api/v1/generated"
 	"github.com/SasukeBo/pmes-device-monitor/api/v1/logic"
@@ -17,6 +18,10 @@ func (r *queryResolver) Dashboards(ctx context.Context, search *string, limit in
 
 func (r *queryResolver) DashboardDevices(ctx context.Context, id int) ([]*model.DashboardDevice, error) {
 	return logic.DashboardDevices(ctx, id)
+}
+
+func (r *queryResolver) DashboardDeviceFresh(ctx context.Context, id int, pid int, sid int) (*model.DashboardDeviceFreshResponse, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 // Query returns generated.QueryResolver implementation.

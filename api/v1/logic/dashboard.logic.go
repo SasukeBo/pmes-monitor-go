@@ -117,13 +117,22 @@ func realtimeDeviceAnalyze(ids []int) ([]*model.DashboardDevice, error) {
 			Status: device.GetStatusString(),
 		}
 
+		var tx = orm.Begin()
+		var lastPLog orm.DeviceProduceLog
+		tx.Model(&lastPLog).Where("device_id = ?", id).Last(&lastPLog)
+		var lastSLog orm.DeviceStatusLog
+		tx.Model(&lastSLog).Where("device_id = ?", id).Last(&lastSLog)
+		out.LastProduceLogID = int(lastPLog.ID)
+		out.LastStatusLogID = int(lastSLog.ID)
+
 		// 统计产量
-		orm.Model(orm.DeviceProduceLog{}).Where(
+		tx.Model(orm.DeviceProduceLog{}).Where(
 			"device_id = ? AND created_at > ?", id, today,
 		).Select("SUM(total) as total, SUM(ng) as ng").Scan(&out)
 
+		// 统计时间占比
 		var durations = []int{0, 0, 0, 0}
-		rows, err := orm.Model(orm.DeviceStatusLog{}).Where(
+		rows, err := tx.Model(orm.DeviceStatusLog{}).Where(
 			"device_id = ? AND created_at > ?", id, today,
 		).Select("SUM(duration), device_status_logs.status").Group("device_status_logs.status").Rows()
 		if err == nil {

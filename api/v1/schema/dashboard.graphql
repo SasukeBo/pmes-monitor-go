@@ -10,3 +10,10 @@ type Dashboard {
     runningTotal: Int!
     errorTotal: Int!
 }
+
+type DashboardDeviceFreshResponse {
+    produceLogs: [DeviceProduceLog!]!
+    statusLogs: [DeviceStatusLog!]!
+    lastProduceLogID: Int!
+    lastStatusLogID: Int!
+}
