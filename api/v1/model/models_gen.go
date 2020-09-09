@@ -32,6 +32,19 @@ type DashboardDeviceFreshResponse struct {
 	StatusLogs  []*DeviceStatusLog  `json:"statusLogs"`
 }
 
+type DashboardDeviceStatusResponse struct {
+	Stopped int `json:"stopped"`
+	Running int `json:"running"`
+	Offline int `json:"offline"`
+	Error   int `json:"error"`
+}
+
+type DashboardOverviewAnalyzeResponse struct {
+	Total      int     `json:"total"`
+	Ng         int     `json:"ng"`
+	Activation float64 `json:"activation"`
+}
+
 type DashboardWrap struct {
 	Total      int          `json:"total"`
 	Dashboards []*Dashboard `json:"dashboards"`

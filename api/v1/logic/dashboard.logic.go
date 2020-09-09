@@ -102,10 +102,14 @@ func DashboardDevices(ctx context.Context, id int) ([]*model.DashboardDevice, er
 	return realtimeDeviceAnalyze(deviceIDs)
 }
 
+func getToday() time.Time {
+	var now = time.Now()
+	return time.Date(now.Year(), now.Month(), now.Day(), -8, 0, 0, 0, time.UTC)
+}
+
 func realtimeDeviceAnalyze(ids []int) ([]*model.DashboardDevice, error) {
 	var outs []*model.DashboardDevice
-	var now = time.Now()
-	var today = time.Date(now.Year(), now.Month(), now.Day(), -8, 0, 0, 0, time.UTC)
+	var today = getToday()
 	for _, id := range ids {
 		var device orm.Device
 		if err := device.Get(id); err != nil {
@@ -219,4 +223,75 @@ func DashboardDeviceFresh(ctx context.Context, id int, pid int, sid int) (*model
 		ProduceLogs: pOuts,
 		StatusLogs:  sOuts,
 	}, nil
+}
+
+func DashboardOverviewAnalyze(ctx context.Context, id int) (*model.DashboardOverviewAnalyzeResponse, error) {
+	var ds orm.Dashboard
+	if err := ds.Get(id); err != nil {
+		return nil, err
+	}
+
+	var out model.DashboardOverviewAnalyzeResponse
+	deviceIDs := ds.GetDeviceIDs()
+	today := getToday()
+	orm.Model(orm.DeviceProduceLog{}).Where(
+		"device_id in (?) AND created_at > ?", deviceIDs, today,
+	).Select("SUM(total) as total, SUM(ng) as ng").Scan(&out)
+
+	var durations = []int{0, 0, 0, 0}
+	query := orm.Model(orm.DeviceStatusLog{}).Where("device_id in (?) AND created_at > ?", deviceIDs, today)
+	query = query.Select("SUM(duration), device_status_logs.status").Group("device_status_logs.status")
+	query = query.Order("device_status_logs.status")
+	rows, err := query.Rows()
+	if err == nil {
+		var sum, status int
+		for rows.Next() {
+			if err := rows.Scan(&sum, &status); err != nil {
+				continue
+			}
+			if status < 4 {
+				durations[status] = sum
+			}
+		}
+	}
+	power := durations[0] + durations[1] + durations[3]
+	if power > 0 {
+		out.Activation = float64(durations[1]) / float64(power)
+	}
+
+	return &out, nil
+}
+
+func DashboardDeviceStatus(ctx context.Context, id int) (*model.DashboardDeviceStatusResponse, error) {
+	var ds orm.Dashboard
+	if err := ds.Get(id); err != nil {
+		return nil, err
+	}
+
+	var out model.DashboardDeviceStatusResponse
+	deviceIDs := ds.GetDeviceIDs()
+
+	query := orm.Model(&orm.Device{}).Where("id in (?)", deviceIDs)
+	query = query.Select("COUNT(id), devices.status").Group("devices.status").Order("devices.status")
+	rows, err := query.Rows()
+	if err == nil {
+		var count, status int
+		for rows.Next() {
+			if err := rows.Scan(&count, &status); err != nil {
+				continue
+			}
+			switch status {
+			case orm.DeviceStatusStopped:
+				out.Stopped = count
+			case orm.DeviceStatusRunning:
+				out.Running = count
+			case orm.DeviceStatusShutdown:
+				out.Offline = count
+			case orm.DeviceStatusError:
+				out.Error = count
+			}
+		}
+	}
+
+	return &out, nil
 }

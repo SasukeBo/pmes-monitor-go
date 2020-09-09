@@ -23,6 +23,14 @@ func (r *queryResolver) DashboardDeviceFresh(ctx context.Context, id int, pid in
 	return logic.DashboardDeviceFresh(ctx, id, pid, sid)
 }
 
+func (r *queryResolver) DashboardOverviewAnalyze(ctx context.Context, id int) (*model.DashboardOverviewAnalyzeResponse, error) {
+	return logic.DashboardOverviewAnalyze(ctx, id)
+}
+
+func (r *queryResolver) DashboardDeviceStatus(ctx context.Context, id int) (*model.DashboardDeviceStatusResponse, error) {
+	return logic.DashboardDeviceStatus(ctx, id)
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 

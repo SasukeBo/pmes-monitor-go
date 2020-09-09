@@ -6,4 +6,10 @@ type Query {
 
     "更新看板中的设备数据，需要上次拉取的最新日志的ID"
     dashboardDeviceFresh(id: Int!, pid: Int!, sid: Int!): DashboardDeviceFreshResponse!
+
+    "看板总产量、良率、平均时间稼动率"
+    dashboardOverviewAnalyze(id: Int!): DashboardOverviewAnalyzeResponse!
+
+    "看板设备状态统计"
+    dashboardDeviceStatus(id: Int!): DashboardDeviceStatusResponse!
 }

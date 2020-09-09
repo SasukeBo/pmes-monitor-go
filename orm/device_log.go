@@ -109,7 +109,7 @@ func (dsl *DeviceStatusLog) GetErrorIdxs() []int {
 	var idxs []int
 	if v, ok := dsl.ErrorIdxs[ErrorIdxsKey]; ok {
 		if vs, ok := v.([]interface{}); ok {
-			for item, _ := range vs {
+			for _, item := range vs {
 				idx, err := strconv.Atoi(fmt.Sprint(item))
 				if err != nil {
 					continue
