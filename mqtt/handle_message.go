@@ -40,6 +40,10 @@ func handleMessage(payload string) {
 		return
 	}
 
+	if status == orm.DeviceStatusError {
+		fmt.Printf("[ErrorCode]: %v\n", payload)
+	}
+
 	var produceLog orm.DeviceProduceLog
 	produceLog.Record(&device, total, ng)
 	var statusLog orm.DeviceStatusLog
@@ -69,8 +73,8 @@ func analyzeMessage(msg string) (status int, total int, ng int, errorIndex []int
 	// 不良
 	ng = wordsToAmount(words[3:5])
 
-	if len(words) > 10 {
-		errorIndex = wordsToErrorIdxs(words[10:])
+	if len(words) > 9 {
+		errorIndex = wordsToErrorIdxs(words[9:])
 	}
 	return
 }

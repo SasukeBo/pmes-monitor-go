@@ -50,8 +50,12 @@ func TestHandleMessage(t *testing.T) {
 	// 92 46
 	// 58528af7ff84 0011 0375 0000 0000 0000 0010 00f0 0000 0000 0000 0000000000000000000000000000000000000000
 	//var message = "58528af7ff84 0020 1faa 0000 00b1 0000 0000 0000 0000 0004 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000"
-	var message = "58528af7ff84 0010 1e73 0000 0000 0000000000000000000000000000000000000000000000000000000000000000"
-	handleMessage(strings.ReplaceAll(message, " ", ""))
+	//                               1         1         1                        1    1
+	var message = "58528af7ff84 0010 1e73 0000 0000 0000 0000 0000 0000 0000 0000 0000 0400 00000000000000000000000000000000"
+	//handleMessage(strings.ReplaceAll(message, " ", ""))
+	payload := strings.ReplaceAll(message, " ", "")
+	status, total, ng, errorIndex, err := analyzeMessage(payload[12:])
+	fmt.Printf("status: %v, total: %v, ng: %v, errorIndex: %v, err: %v\n", status, total, ng, errorIndex, err)
 }
 
 func TestWordsToErrorIdxs(t *testing.T) {
