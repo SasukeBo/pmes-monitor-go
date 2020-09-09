@@ -22,6 +22,7 @@ var ErrIllegalPayload = errors.New("illegal payload length")
 
 func handleMessage(payload string) {
 	payload = strings.TrimSpace(payload)
+	fmt.Println(payload)
 	if len(payload) < 52 {
 		log.Errorln(ErrIllegalPayload)
 		return
