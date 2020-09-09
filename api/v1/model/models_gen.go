@@ -27,6 +27,11 @@ type DashboardDevice struct {
 	LastStatusTime   time.Time `json:"lastStatusTime"`
 }
 
+type DashboardDeviceErrorsResponse struct {
+	Category []string `json:"category"`
+	Data     []int    `json:"data"`
+}
+
 type DashboardDeviceFreshResponse struct {
 	ProduceLogs []*DeviceProduceLog `json:"produceLogs"`
 	StatusLogs  []*DeviceStatusLog  `json:"statusLogs"`

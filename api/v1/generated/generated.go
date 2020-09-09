@@ -64,6 +64,11 @@ type ComplexityRoot struct {
 		Total            func(childComplexity int) int
 	}
 
+	DashboardDeviceErrorsResponse struct {
+		Category func(childComplexity int) int
+		Data     func(childComplexity int) int
+	}
+
 	DashboardDeviceFreshResponse struct {
 		ProduceLogs func(childComplexity int) int
 		StatusLogs  func(childComplexity int) int
@@ -103,6 +108,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		DashboardDeviceErrors    func(childComplexity int, id int) int
 		DashboardDeviceFresh     func(childComplexity int, id int, pid int, sid int) int
 		DashboardDeviceStatus    func(childComplexity int, id int) int
 		DashboardDevices         func(childComplexity int, id int) int
@@ -117,6 +123,7 @@ type QueryResolver interface {
 	DashboardDeviceFresh(ctx context.Context, id int, pid int, sid int) (*model.DashboardDeviceFreshResponse, error)
 	DashboardOverviewAnalyze(ctx context.Context, id int) (*model.DashboardOverviewAnalyzeResponse, error)
 	DashboardDeviceStatus(ctx context.Context, id int) (*model.DashboardDeviceStatusResponse, error)
+	DashboardDeviceErrors(ctx context.Context, id int) (*model.DashboardDeviceErrorsResponse, error)
 }
 
 type executableSchema struct {
@@ -238,6 +245,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DashboardDevice.Total(childComplexity), true
+
+	case "DashboardDeviceErrorsResponse.category":
+		if e.complexity.DashboardDeviceErrorsResponse.Category == nil {
+			break
+		}
+
+		return e.complexity.DashboardDeviceErrorsResponse.Category(childComplexity), true
+
+	case "DashboardDeviceErrorsResponse.data":
+		if e.complexity.DashboardDeviceErrorsResponse.Data == nil {
+			break
+		}
+
+		return e.complexity.DashboardDeviceErrorsResponse.Data(childComplexity), true
 
 	case "DashboardDeviceFreshResponse.produceLogs":
 		if e.complexity.DashboardDeviceFreshResponse.ProduceLogs == nil {
@@ -379,6 +400,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DeviceStatusLog.Status(childComplexity), true
 
+	case "Query.dashboardDeviceErrors":
+		if e.complexity.Query.DashboardDeviceErrors == nil {
+			break
+		}
+
+		args, err := ec.field_Query_dashboardDeviceErrors_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.DashboardDeviceErrors(childComplexity, args["id"].(int)), true
+
 	case "Query.dashboardDeviceFresh":
 		if e.complexity.Query.DashboardDeviceFresh == nil {
 			break
@@ -518,6 +551,11 @@ type DashboardDeviceStatusResponse {
     running: Int!
     offline: Int!
     error: Int!
+}
+
+type DashboardDeviceErrorsResponse {
+    category: [String!]!
+    data: [Int!]!
 }`, BuiltIn: false},
 	&ast.Source{Name: "schema/device.graphql", Input: `type DashboardDevice {
     id: Int!
@@ -560,6 +598,9 @@ type DeviceStatusLog {
 
     "看板设备状态统计"
     dashboardDeviceStatus(id: Int!): DashboardDeviceStatusResponse!
+
+    "看板设备故障次数统计"
+    dashboardDeviceErrors(id: Int!): DashboardDeviceErrorsResponse!
 }`, BuiltIn: false},
 	&ast.Source{Name: "schema/schema.graphql", Input: `scalar Time
 `, BuiltIn: false},
@@ -581,6 +622,20 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_dashboardDeviceErrors_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -1230,6 +1285,74 @@ func (ec *executionContext) _DashboardDevice_lastStatusTime(ctx context.Context,
 	res := resTmp.(time.Time)
 	fc.Result = res
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DashboardDeviceErrorsResponse_category(ctx context.Context, field graphql.CollectedField, obj *model.DashboardDeviceErrorsResponse) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "DashboardDeviceErrorsResponse",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Category, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DashboardDeviceErrorsResponse_data(ctx context.Context, field graphql.CollectedField, obj *model.DashboardDeviceErrorsResponse) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "DashboardDeviceErrorsResponse",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Data, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]int)
+	fc.Result = res
+	return ec.marshalNInt2ᚕintᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _DashboardDeviceFreshResponse_produceLogs(ctx context.Context, field graphql.CollectedField, obj *model.DashboardDeviceFreshResponse) (ret graphql.Marshaler) {
@@ -2115,6 +2238,47 @@ func (ec *executionContext) _Query_dashboardDeviceStatus(ctx context.Context, fi
 	res := resTmp.(*model.DashboardDeviceStatusResponse)
 	fc.Result = res
 	return ec.marshalNDashboardDeviceStatusResponse2ᚖgithubᚗcomᚋSasukeBoᚋpmesᚑdeviceᚑmonitorᚋapiᚋv1ᚋmodelᚐDashboardDeviceStatusResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_dashboardDeviceErrors(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_dashboardDeviceErrors_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DashboardDeviceErrors(rctx, args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.DashboardDeviceErrorsResponse)
+	fc.Result = res
+	return ec.marshalNDashboardDeviceErrorsResponse2ᚖgithubᚗcomᚋSasukeBoᚋpmesᚑdeviceᚑmonitorᚋapiᚋv1ᚋmodelᚐDashboardDeviceErrorsResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3368,6 +3532,38 @@ func (ec *executionContext) _DashboardDevice(ctx context.Context, sel ast.Select
 	return out
 }
 
+var dashboardDeviceErrorsResponseImplementors = []string{"DashboardDeviceErrorsResponse"}
+
+func (ec *executionContext) _DashboardDeviceErrorsResponse(ctx context.Context, sel ast.SelectionSet, obj *model.DashboardDeviceErrorsResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dashboardDeviceErrorsResponseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DashboardDeviceErrorsResponse")
+		case "category":
+			out.Values[i] = ec._DashboardDeviceErrorsResponse_category(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "data":
+			out.Values[i] = ec._DashboardDeviceErrorsResponse_data(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var dashboardDeviceFreshResponseImplementors = []string{"DashboardDeviceFreshResponse"}
 
 func (ec *executionContext) _DashboardDeviceFreshResponse(ctx context.Context, sel ast.SelectionSet, obj *model.DashboardDeviceFreshResponse) graphql.Marshaler {
@@ -3680,6 +3876,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_dashboardDeviceStatus(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "dashboardDeviceErrors":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_dashboardDeviceErrors(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -4059,6 +4269,20 @@ func (ec *executionContext) marshalNDashboardDevice2ᚖgithubᚗcomᚋSasukeBo�
 		return graphql.Null
 	}
 	return ec._DashboardDevice(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNDashboardDeviceErrorsResponse2githubᚗcomᚋSasukeBoᚋpmesᚑdeviceᚑmonitorᚋapiᚋv1ᚋmodelᚐDashboardDeviceErrorsResponse(ctx context.Context, sel ast.SelectionSet, v model.DashboardDeviceErrorsResponse) graphql.Marshaler {
+	return ec._DashboardDeviceErrorsResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNDashboardDeviceErrorsResponse2ᚖgithubᚗcomᚋSasukeBoᚋpmesᚑdeviceᚑmonitorᚋapiᚋv1ᚋmodelᚐDashboardDeviceErrorsResponse(ctx context.Context, sel ast.SelectionSet, v *model.DashboardDeviceErrorsResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._DashboardDeviceErrorsResponse(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNDashboardDeviceFreshResponse2githubᚗcomᚋSasukeBoᚋpmesᚑdeviceᚑmonitorᚋapiᚋv1ᚋmodelᚐDashboardDeviceFreshResponse(ctx context.Context, sel ast.SelectionSet, v model.DashboardDeviceFreshResponse) graphql.Marshaler {

@@ -31,6 +31,10 @@ func (r *queryResolver) DashboardDeviceStatus(ctx context.Context, id int) (*mod
 	return logic.DashboardDeviceStatus(ctx, id)
 }
 
+func (r *queryResolver) DashboardDeviceErrors(ctx context.Context, id int) (*model.DashboardDeviceErrorsResponse, error) {
+	return logic.DashboardDeviceErrors(ctx, id)
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 

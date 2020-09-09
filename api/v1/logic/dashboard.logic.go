@@ -254,7 +254,7 @@ func DashboardOverviewAnalyze(ctx context.Context, id int) (*model.DashboardOver
 			}
 		}
 	}
-	power := durations[0] + durations[1] + durations[3]
+	power := durations[0] + durations[1] + durations[2]
 	if power > 0 {
 		out.Activation = float64(durations[1]) / float64(power)
 	}
@@ -294,4 +294,38 @@ func DashboardDeviceStatus(ctx context.Context, id int) (*model.DashboardDeviceS
 	}
 
 	return &out, nil
+}
+
+func DashboardDeviceErrors(ctx context.Context, id int) (*model.DashboardDeviceErrorsResponse, error) {
+	var ds orm.Dashboard
+	if err := ds.Get(id); err != nil {
+		return nil, err
+	}
+
+	deviceIDs := ds.GetDeviceIDs()
+	query := orm.Model(&orm.DeviceStatusLog{}).Select("COUNT(device_status_logs.id), devices.number")
+	query = query.Joins("JOIN devices ON device_status_logs.device_id = devices.id")
+	query = query.Where("device_status_logs.device_id in (?) AND device_status_logs.status = ?", deviceIDs, orm.DeviceStatusError)
+	query = query.Group("devices.number")
+	rows, err := query.Rows()
+	if err != nil {
+		return nil, err
+	}
+
+	var category []string
+	var data []int
+	for rows.Next() {
+		var c string
+		var d int
+		if err := rows.Scan(&d, &c); err != nil {
+			continue
+		}
+		category = append(category, c)
+		data = append(data, d)
+	}
+
+	return &model.DashboardDeviceErrorsResponse{
+		Category: category,
+		Data:     data,
+	}, nil
 }
