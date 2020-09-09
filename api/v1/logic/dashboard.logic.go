@@ -102,14 +102,24 @@ func DashboardDevices(ctx context.Context, id int) ([]*model.DashboardDevice, er
 	return realtimeDeviceAnalyze(deviceIDs)
 }
 
-func getToday() time.Time {
+// 返回今日晚班换班时间线，及白晚班判断, true为白班
+func getCurrentShift() time.Time {
 	var now = time.Now()
-	return time.Date(now.Year(), now.Month(), now.Day(), -8, 0, 0, 0, time.UTC)
+	var dayLine = time.Date(now.Year(), now.Month(), now.Day(), 23, 40, 0, 0, time.UTC)
+	var nightLine = time.Date(now.Year(), now.Month(), now.Day(), 11, 40, 0, 0, time.UTC)
+	if isNight := now.After(nightLine) && now.Before(dayLine); isNight { // 今日晚班
+		return nightLine
+	} else {
+		if now.Before(nightLine) { //今日白班
+			return dayLine.Add(-24 * time.Hour)
+		}
+		return dayLine // 第二日白班
+	}
 }
 
 func realtimeDeviceAnalyze(ids []int) ([]*model.DashboardDevice, error) {
 	var outs []*model.DashboardDevice
-	var today = getToday()
+	var shiftTime = getCurrentShift()
 	for _, id := range ids {
 		var device orm.Device
 		if err := device.Get(id); err != nil {
@@ -133,13 +143,13 @@ func realtimeDeviceAnalyze(ids []int) ([]*model.DashboardDevice, error) {
 
 		// 统计产量
 		tx.Model(orm.DeviceProduceLog{}).Where(
-			"device_id = ? AND created_at > ?", id, today,
+			"device_id = ? AND created_at > ?", id, shiftTime,
 		).Select("SUM(total) as total, SUM(ng) as ng").Scan(&out)
 
 		// 统计时间占比
 		var durations = []int{0, 0, 0, 0}
 		rows, err := tx.Model(orm.DeviceStatusLog{}).Where(
-			"device_id = ? AND created_at > ?", id, today,
+			"device_id = ? AND created_at > ?", id, shiftTime,
 		).Select("SUM(duration), device_status_logs.status").Group("device_status_logs.status").Rows()
 		if err == nil {
 			var sum, status int
@@ -233,13 +243,13 @@ func DashboardOverviewAnalyze(ctx context.Context, id int) (*model.DashboardOver
 
 	var out model.DashboardOverviewAnalyzeResponse
 	deviceIDs := ds.GetDeviceIDs()
-	today := getToday()
+	shiftTime := getCurrentShift()
 	orm.Model(orm.DeviceProduceLog{}).Where(
-		"device_id in (?) AND created_at > ?", deviceIDs, today,
+		"device_id in (?) AND created_at > ?", deviceIDs, shiftTime,
 	).Select("SUM(total) as total, SUM(ng) as ng").Scan(&out)
 
 	var durations = []int{0, 0, 0, 0}
-	query := orm.Model(orm.DeviceStatusLog{}).Where("device_id in (?) AND created_at > ?", deviceIDs, today)
+	query := orm.Model(orm.DeviceStatusLog{}).Where("device_id in (?) AND created_at > ?", deviceIDs, shiftTime)
 	query = query.Select("SUM(duration), device_status_logs.status").Group("device_status_logs.status")
 	query = query.Order("device_status_logs.status")
 	rows, err := query.Rows()
