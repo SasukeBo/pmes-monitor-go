@@ -2,6 +2,10 @@
 
 package model
 
+import (
+	"time"
+)
+
 type Dashboard struct {
 	ID           int    `json:"id"`
 	Name         string `json:"name"`
@@ -11,22 +15,21 @@ type Dashboard struct {
 }
 
 type DashboardDevice struct {
-	ID               int      `json:"id"`
-	Number           string   `json:"number"`
-	Status           string   `json:"status"`
-	Total            int      `json:"total"`
-	Ng               int      `json:"ng"`
-	Durations        []int    `json:"durations"`
-	Errors           []string `json:"errors"`
-	LastProduceLogID int      `json:"lastProduceLogID"`
-	LastStatusLogID  int      `json:"lastStatusLogID"`
+	ID               int       `json:"id"`
+	Number           string    `json:"number"`
+	Status           string    `json:"status"`
+	Total            int       `json:"total"`
+	Ng               int       `json:"ng"`
+	Durations        []int     `json:"durations"`
+	Errors           []string  `json:"errors"`
+	LastProduceLogID int       `json:"lastProduceLogID"`
+	LastStatusLogID  int       `json:"lastStatusLogID"`
+	LastStatusTime   time.Time `json:"lastStatusTime"`
 }
 
 type DashboardDeviceFreshResponse struct {
-	ProduceLogs      []*DeviceProduceLog `json:"produceLogs"`
-	StatusLogs       []*DeviceStatusLog  `json:"statusLogs"`
-	LastProduceLogID int                 `json:"lastProduceLogID"`
-	LastStatusLogID  int                 `json:"lastStatusLogID"`
+	ProduceLogs []*DeviceProduceLog `json:"produceLogs"`
+	StatusLogs  []*DeviceStatusLog  `json:"statusLogs"`
 }
 
 type DashboardWrap struct {

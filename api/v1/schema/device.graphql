@@ -8,6 +8,7 @@ type DashboardDevice {
     errors: [String!]!
     lastProduceLogID: Int!
     lastStatusLogID: Int!
+    lastStatusTime: Time! # 标记最新状态的开始时间
 }
 
 type DeviceProduceLog {

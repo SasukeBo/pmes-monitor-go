@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -56,6 +57,7 @@ type ComplexityRoot struct {
 		ID               func(childComplexity int) int
 		LastProduceLogID func(childComplexity int) int
 		LastStatusLogID  func(childComplexity int) int
+		LastStatusTime   func(childComplexity int) int
 		Ng               func(childComplexity int) int
 		Number           func(childComplexity int) int
 		Status           func(childComplexity int) int
@@ -63,10 +65,8 @@ type ComplexityRoot struct {
 	}
 
 	DashboardDeviceFreshResponse struct {
-		LastProduceLogID func(childComplexity int) int
-		LastStatusLogID  func(childComplexity int) int
-		ProduceLogs      func(childComplexity int) int
-		StatusLogs       func(childComplexity int) int
+		ProduceLogs func(childComplexity int) int
+		StatusLogs  func(childComplexity int) int
 	}
 
 	DashboardWrap struct {
@@ -187,6 +187,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DashboardDevice.LastStatusLogID(childComplexity), true
 
+	case "DashboardDevice.lastStatusTime":
+		if e.complexity.DashboardDevice.LastStatusTime == nil {
+			break
+		}
+
+		return e.complexity.DashboardDevice.LastStatusTime(childComplexity), true
+
 	case "DashboardDevice.ng":
 		if e.complexity.DashboardDevice.Ng == nil {
 			break
@@ -214,20 +221,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DashboardDevice.Total(childComplexity), true
-
-	case "DashboardDeviceFreshResponse.lastProduceLogID":
-		if e.complexity.DashboardDeviceFreshResponse.LastProduceLogID == nil {
-			break
-		}
-
-		return e.complexity.DashboardDeviceFreshResponse.LastProduceLogID(childComplexity), true
-
-	case "DashboardDeviceFreshResponse.lastStatusLogID":
-		if e.complexity.DashboardDeviceFreshResponse.LastStatusLogID == nil {
-			break
-		}
-
-		return e.complexity.DashboardDeviceFreshResponse.LastStatusLogID(childComplexity), true
 
 	case "DashboardDeviceFreshResponse.produceLogs":
 		if e.complexity.DashboardDeviceFreshResponse.ProduceLogs == nil {
@@ -422,8 +415,6 @@ type Dashboard {
 type DashboardDeviceFreshResponse {
     produceLogs: [DeviceProduceLog!]!
     statusLogs: [DeviceStatusLog!]!
-    lastProduceLogID: Int!
-    lastStatusLogID: Int!
 }
 `, BuiltIn: false},
 	&ast.Source{Name: "schema/device.graphql", Input: `type DashboardDevice {
@@ -436,6 +427,7 @@ type DashboardDeviceFreshResponse {
     errors: [String!]!
     lastProduceLogID: Int!
     lastStatusLogID: Int!
+    lastStatusTime: Time!
 }
 
 type DeviceProduceLog {
@@ -461,6 +453,8 @@ type DeviceStatusLog {
     "更新看板中的设备数据，需要上次拉取的最新日志的ID"
     dashboardDeviceFresh(id: Int!, pid: Int!, sid: Int!): DashboardDeviceFreshResponse!
 }`, BuiltIn: false},
+	&ast.Source{Name: "schema/schema.graphql", Input: `scalar Time
+`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -1068,6 +1062,40 @@ func (ec *executionContext) _DashboardDevice_lastStatusLogID(ctx context.Context
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _DashboardDevice_lastStatusTime(ctx context.Context, field graphql.CollectedField, obj *model.DashboardDevice) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "DashboardDevice",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastStatusTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _DashboardDeviceFreshResponse_produceLogs(ctx context.Context, field graphql.CollectedField, obj *model.DashboardDeviceFreshResponse) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1134,74 +1162,6 @@ func (ec *executionContext) _DashboardDeviceFreshResponse_statusLogs(ctx context
 	res := resTmp.([]*model.DeviceStatusLog)
 	fc.Result = res
 	return ec.marshalNDeviceStatusLog2ᚕᚖgithubᚗcomᚋSasukeBoᚋpmesᚑdeviceᚑmonitorᚋapiᚋv1ᚋmodelᚐDeviceStatusLogᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _DashboardDeviceFreshResponse_lastProduceLogID(ctx context.Context, field graphql.CollectedField, obj *model.DashboardDeviceFreshResponse) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "DashboardDeviceFreshResponse",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LastProduceLogID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _DashboardDeviceFreshResponse_lastStatusLogID(ctx context.Context, field graphql.CollectedField, obj *model.DashboardDeviceFreshResponse) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "DashboardDeviceFreshResponse",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LastStatusLogID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _DashboardWrap_total(ctx context.Context, field graphql.CollectedField, obj *model.DashboardWrap) (ret graphql.Marshaler) {
@@ -2936,6 +2896,11 @@ func (ec *executionContext) _DashboardDevice(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "lastStatusTime":
+			out.Values[i] = ec._DashboardDevice_lastStatusTime(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2965,16 +2930,6 @@ func (ec *executionContext) _DashboardDeviceFreshResponse(ctx context.Context, s
 			}
 		case "statusLogs":
 			out.Values[i] = ec._DashboardDeviceFreshResponse_statusLogs(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "lastProduceLogID":
-			out.Values[i] = ec._DashboardDeviceFreshResponse_lastProduceLogID(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "lastStatusLogID":
-			out.Values[i] = ec._DashboardDeviceFreshResponse_lastStatusLogID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3757,6 +3712,20 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	return graphql.UnmarshalTime(v)
+}
+
+func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	res := graphql.MarshalTime(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

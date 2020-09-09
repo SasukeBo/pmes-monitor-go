@@ -62,6 +62,9 @@ func (dpl *DeviceProduceLog) Record(device *Device, ct, cn int) error {
 		if ct >= last.CurrentTotal && cn >= last.CurrentNG { // 数量非骤减，则表示PLC数据未重置
 			dpl.Total = ct - last.CurrentTotal
 			dpl.NG = cn - last.CurrentNG
+			if dpl.Total == 0 && dpl.NG == 0 { // 值无改变不记录
+				return nil
+			}
 		} else { // 否则当前数量统计更新
 			dpl.Total = ct
 			dpl.NG = cn
@@ -85,6 +88,21 @@ type DeviceStatusLog struct {
 	ErrorIdxs types.Map `gorm:"COMMENT:'故障代码';column:error_idxs;type:JSON"`
 	Status    int       `gorm:"COMMENT:'设备状态';default:0"`
 	Duration  int       `gorm:"COMMENT:'持续时间';column:duration;default:0"`
+}
+
+func (dsl *DeviceStatusLog) GetStatusString() string {
+	switch dsl.Status {
+	case DeviceStatusError:
+		return "error"
+	case DeviceStatusRunning:
+		return "running"
+	case DeviceStatusStopped:
+		return "stopped"
+	case DeviceStatusShutdown:
+		return "offline"
+	default:
+		return "offline"
+	}
 }
 
 func (dsl *DeviceStatusLog) GetErrorIdxs() []int {

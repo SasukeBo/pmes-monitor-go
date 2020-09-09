@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/SasukeBo/pmes-device-monitor/api/v1/model"
 	"github.com/SasukeBo/pmes-device-monitor/orm"
+	"github.com/jinzhu/copier"
 	"strconv"
 	"time"
 )
@@ -124,6 +125,7 @@ func realtimeDeviceAnalyze(ids []int) ([]*model.DashboardDevice, error) {
 		tx.Model(&lastSLog).Where("device_id = ?", id).Last(&lastSLog)
 		out.LastProduceLogID = int(lastPLog.ID)
 		out.LastStatusLogID = int(lastSLog.ID)
+		out.LastStatusTime = lastSLog.CreatedAt
 
 		// 统计产量
 		tx.Model(orm.DeviceProduceLog{}).Where(
@@ -147,6 +149,7 @@ func realtimeDeviceAnalyze(ids []int) ([]*model.DashboardDevice, error) {
 			}
 		}
 		out.Durations = durations
+		tx.Commit()
 
 		var messages []string
 		if device.Status == orm.DeviceStatusError {
@@ -170,4 +173,50 @@ func realtimeDeviceAnalyze(ids []int) ([]*model.DashboardDevice, error) {
 	}
 
 	return outs, nil
+}
+
+func DashboardDeviceFresh(ctx context.Context, id int, pid int, sid int) (*model.DashboardDeviceFreshResponse, error) {
+	var device orm.Device
+	if err := device.Get(id); err != nil {
+		return nil, err
+	}
+	errorCode := device.GetErrorCode()
+	msgs := errorCode.GetErrors()
+
+	var pLogs []orm.DeviceProduceLog
+	orm.Model(&orm.DeviceProduceLog{}).Where("device_id = ? AND id > ?", id, pid).Find(&pLogs)
+	var sLogs []orm.DeviceStatusLog
+	orm.Model(&orm.DeviceStatusLog{}).Where("device_id = ? AND id > ?", id, sid).Find(&sLogs)
+
+	var pOuts []*model.DeviceProduceLog
+	for _, p := range pLogs {
+		var out model.DeviceProduceLog
+		if err := copier.Copy(&out, &p); err == nil {
+			pOuts = append(pOuts, &out)
+		}
+	}
+
+	var sOuts []*model.DeviceStatusLog
+	for _, s := range sLogs {
+		var out model.DeviceStatusLog
+		if err := copier.Copy(&out, &s); err == nil {
+			out.Status = s.GetStatusString()
+			if s.Status == orm.DeviceStatusError {
+				idxs := s.GetErrorIdxs()
+				var messages []string
+				for _, idx := range idxs {
+					if idx < len(msgs) {
+						messages = append(messages, msgs[idx])
+					}
+				}
+				out.Messages = messages
+			}
+			sOuts = append(sOuts, &out)
+		}
+	}
+
+	return &model.DashboardDeviceFreshResponse{
+		ProduceLogs: pOuts,
+		StatusLogs:  sOuts,
+	}, nil
 }
