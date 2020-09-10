@@ -224,7 +224,7 @@ func AdminCreateDevices(ctx context.Context, input model.CreateDeviceInput) (str
 			Number:       di.Number,
 			DeviceTypeID: int(deviceType.ID),
 			Mac:          di.Mac,
-			Status:       orm.DeviceStatusStopped,
+			Status:       orm.DeviceStatusShutdown,
 		}
 		if di.Address != nil {
 			device.Address = *di.Address

@@ -127,19 +127,30 @@ func realtimeDeviceAnalyze(ids []int) ([]*model.DashboardDevice, error) {
 		}
 
 		var out = model.DashboardDevice{
-			ID:     int(device.ID),
-			Number: device.Number,
-			Status: device.GetStatusString(),
+			ID:      int(device.ID),
+			Number:  device.Number,
+			Address: device.Address,
+			Status:  device.GetStatusString(),
+		}
+
+		var dt orm.DeviceType
+		if err := orm.Model(&dt).Where("id = ?", device.DeviceTypeID).First(&dt).Error; err == nil {
+			out.DeviceType = dt.Name
 		}
 
 		var tx = orm.Begin()
 		var lastPLog orm.DeviceProduceLog
-		tx.Model(&lastPLog).Where("device_id = ?", id).Last(&lastPLog)
+		if err := tx.Model(&lastPLog).Where("device_id = ?", id).Last(&lastPLog).Error; err == nil {
+			out.LastProduceLogID = int(lastPLog.ID)
+		}
 		var lastSLog orm.DeviceStatusLog
-		tx.Model(&lastSLog).Where("device_id = ?", id).Last(&lastSLog)
-		out.LastProduceLogID = int(lastPLog.ID)
-		out.LastStatusLogID = int(lastSLog.ID)
-		out.LastStatusTime = lastSLog.CreatedAt
+		if err := tx.Model(&lastSLog).Where("device_id = ?", id).Last(&lastSLog).Error; err != nil {
+			out.LastStatusLogID = 0
+			out.LastStatusTime = time.Now()
+		} else {
+			out.LastStatusLogID = int(lastSLog.ID)
+			out.LastStatusTime = lastSLog.CreatedAt
+		}
 
 		// 统计产量
 		tx.Model(orm.DeviceProduceLog{}).Where(
@@ -312,10 +323,12 @@ func DashboardDeviceErrors(ctx context.Context, id int) (*model.DashboardDeviceE
 		return nil, err
 	}
 
+	shiftTime := getCurrentShift()
 	deviceIDs := ds.GetDeviceIDs()
 	query := orm.Model(&orm.DeviceStatusLog{}).Select("COUNT(device_status_logs.id), devices.number")
 	query = query.Joins("JOIN devices ON device_status_logs.device_id = devices.id")
 	query = query.Where("device_status_logs.device_id in (?) AND device_status_logs.status = ?", deviceIDs, orm.DeviceStatusError)
+	query = query.Where("device_status_logs.created_at > ?", shiftTime)
 	query = query.Group("devices.number")
 	rows, err := query.Rows()
 	if err != nil {

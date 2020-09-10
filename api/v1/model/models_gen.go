@@ -3,6 +3,9 @@
 package model
 
 import (
+	"fmt"
+	"io"
+	"strconv"
 	"time"
 )
 
@@ -22,6 +25,8 @@ type DashboardDevice struct {
 	Ng               int       `json:"ng"`
 	Durations        []int     `json:"durations"`
 	Errors           []string  `json:"errors"`
+	Address          string    `json:"address"`
+	DeviceType       string    `json:"deviceType"`
 	LastProduceLogID int       `json:"lastProduceLogID"`
 	LastStatusLogID  int       `json:"lastStatusLogID"`
 	LastStatusTime   time.Time `json:"lastStatusTime"`
@@ -68,4 +73,64 @@ type DeviceStatusLog struct {
 	Messages []string `json:"messages"`
 	Status   string   `json:"status"`
 	Duration int      `json:"duration"`
+}
+
+type DeviceWrap struct {
+	Devices []*ListDevice `json:"devices"`
+	Total   int           `json:"total"`
+}
+
+type ListDevice struct {
+	ID         int     `json:"id"`
+	Number     string  `json:"number"`
+	DeviceType string  `json:"deviceType"`
+	Status     string  `json:"status"`
+	Activation float64 `json:"activation"`
+	Yield      float64 `json:"yield"`
+	Address    string  `json:"address"`
+}
+
+type DeviceStatus string
+
+const (
+	DeviceStatusStopped DeviceStatus = "Stopped"
+	DeviceStatusRunning DeviceStatus = "Running"
+	DeviceStatusOffline DeviceStatus = "Offline"
+	DeviceStatusError   DeviceStatus = "Error"
+)
+
+var AllDeviceStatus = []DeviceStatus{
+	DeviceStatusStopped,
+	DeviceStatusRunning,
+	DeviceStatusOffline,
+	DeviceStatusError,
+}
+
+func (e DeviceStatus) IsValid() bool {
+	switch e {
+	case DeviceStatusStopped, DeviceStatusRunning, DeviceStatusOffline, DeviceStatusError:
+		return true
+	}
+	return false
+}
+
+func (e DeviceStatus) String() string {
+	return string(e)
+}
+
+func (e *DeviceStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = DeviceStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid DeviceStatus", str)
+	}
+	return nil
+}
+
+func (e DeviceStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

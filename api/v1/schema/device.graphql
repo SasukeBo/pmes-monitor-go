@@ -6,6 +6,8 @@ type DashboardDevice {
     ng: Int!
     durations: [Int!]!
     errors: [String!]!
+    address: String!
+    deviceType: String!
     lastProduceLogID: Int!
     lastStatusLogID: Int!
     lastStatusTime: Time! # 标记最新状态的开始时间
@@ -24,4 +26,26 @@ type DeviceStatusLog {
     messages: [String!]!
     status: String!
     duration: Int!
+}
+
+type ListDevice {
+    id: Int!
+    number: String!
+    deviceType: String!
+    status: String!
+    activation: Float!
+    yield: Float!
+    address: String!
+}
+
+enum DeviceStatus {
+    Stopped
+    Running
+    Offline
+    Error
+}
+
+type DeviceWrap {
+    devices: [ListDevice!]!
+    total: Int!
 }

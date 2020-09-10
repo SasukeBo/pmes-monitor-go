@@ -12,6 +12,7 @@ require (
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/frankban/quicktest v1.10.2 // indirect
 	github.com/gavv/httpexpect v2.0.0+incompatible
+	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-playground/validator/v10 v10.3.0 // indirect
 	github.com/google/go-querystring v1.0.0 // indirect

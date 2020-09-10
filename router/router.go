@@ -5,12 +5,20 @@ import (
 	"github.com/SasukeBo/configer"
 	"github.com/SasukeBo/log"
 	"github.com/SasukeBo/pmes-device-monitor/router/handler"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"time"
 )
 
 func Start() {
 	r := gin.Default()
 	r.Use(gin.Recovery())
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"http://localhost:8080"},
+		AllowMethods: []string{"POST"},
+		AllowHeaders: []string{"Origin", "Content-Type"},
+		MaxAge:       12 * time.Hour,
+	}))
 
 	//  API v1
 	api1 := r.Group("/monitor/api", handler.HttpRequestLogger(), handler.InjectGinContext())

@@ -35,6 +35,18 @@ func (r *queryResolver) DashboardDeviceErrors(ctx context.Context, id int) (*mod
 	return logic.DashboardDeviceErrors(ctx, id)
 }
 
+func (r *queryResolver) HomeDeviceStatusCount(ctx context.Context) (*model.DashboardDeviceStatusResponse, error) {
+	return logic.HomeDeviceStatusCount(ctx)
+}
+
+func (r *queryResolver) HomeRecentDevices(ctx context.Context, ids []int, limit int) ([]*model.DashboardDevice, error) {
+	return logic.HomeRecentDevices(ctx, ids, limit)
+}
+
+func (r *queryResolver) Devices(ctx context.Context, search *string, status *model.DeviceStatus, page int, limit int) (*model.DeviceWrap, error) {
+	return logic.Devices(ctx, search, status, page, limit)
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 

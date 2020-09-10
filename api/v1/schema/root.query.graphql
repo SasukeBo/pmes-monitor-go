@@ -15,4 +15,13 @@ type Query {
 
     "看板设备故障次数统计"
     dashboardDeviceErrors(id: Int!): DashboardDeviceErrorsResponse!
+
+    "首页设备总状态统计"
+    homeDeviceStatusCount: DashboardDeviceStatusResponse!
+
+    "首页获取最近预览的设备，如果没有则获取最近更新的n个设备"
+    homeRecentDevices(ids: [Int!]!, limit: Int!): [DashboardDevice!]!
+
+    "设备列表"
+    devices(search: String, status: DeviceStatus, page: Int!, limit: Int!): DeviceWrap!
 }
