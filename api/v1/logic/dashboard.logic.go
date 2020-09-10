@@ -146,7 +146,7 @@ func realtimeDeviceAnalyze(ids []int) ([]*model.DashboardDevice, error) {
 		var lastSLog orm.DeviceStatusLog
 		if err := tx.Model(&lastSLog).Where("device_id = ?", id).Last(&lastSLog).Error; err != nil {
 			out.LastStatusLogID = 0
-			out.LastStatusTime = time.Now()
+			out.LastStatusTime = device.CreatedAt
 		} else {
 			out.LastStatusLogID = int(lastSLog.ID)
 			out.LastStatusTime = lastSLog.CreatedAt
