@@ -28,6 +28,10 @@ func Start() {
 		api1.POST("v1/import_error_codes", handler.ImportCodes()) // 上传错误代码
 	}
 
+	{
+		r.GET("/monitor/websocket", handler.Websocket)
+	}
+
 	var port = configer.GetString("service_port")
 	log.Info("Start service on [%s] mode", configer.GetEnv("env"))
 	log.Info("HTTP service listening on %s", port)

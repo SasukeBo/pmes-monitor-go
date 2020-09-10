@@ -10,10 +10,10 @@ import (
 )
 
 //var host = "tcp://192.168.9.135:1883"
-//var host = "tcp://localhost:44765"
+var host = "tcp://localhost:44765"
 
 //var host = "tcp://192.168.9.93:44765"
-var host = "tcp://192.168.5.146:1883"
+//var host = "tcp://192.168.5.146:1883"
 
 func TestConnect(t *testing.T) {
 	c := &service.Client{}
@@ -54,8 +54,8 @@ func TestHandleMessage(t *testing.T) {
 	var message = "58528af7ff84 0010 1e73 0000 0000 0000 0000 0000 0000 0000 0000 0000 0400 00000000000000000000000000000000"
 	//handleMessage(strings.ReplaceAll(message, " ", ""))
 	payload := strings.ReplaceAll(message, " ", "")
-	status, total, ng, errorIndex, err := analyzeMessage(payload[12:])
-	fmt.Printf("status: %v, total: %v, ng: %v, errorIndex: %v, err: %v\n", status, total, ng, errorIndex, err)
+	result, err := analyzeMessage(payload[12:])
+	fmt.Printf("result: %+v, err: %v\n", result, err)
 }
 
 func TestWordsToErrorIdxs(t *testing.T) {

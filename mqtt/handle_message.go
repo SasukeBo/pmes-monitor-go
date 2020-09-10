@@ -2,10 +2,12 @@ package mqtt
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/SasukeBo/log"
 	"github.com/SasukeBo/pmes-device-monitor/orm"
+	"github.com/SasukeBo/pmes-device-monitor/websocket"
 	"math"
 	"strings"
 )
@@ -17,6 +19,13 @@ const (
 	deviceStatusOffline          = 32
 	deviceStatusStoppedWithError = 33
 )
+
+type analyzeResult struct {
+	Status     int
+	Total      int
+	Ng         int
+	ErrorIndex []int
+}
 
 var ErrIllegalPayload = errors.New("illegal payload length")
 
@@ -34,23 +43,27 @@ func handleMessage(payload string) {
 		return
 	}
 
-	status, total, ng, errorIndex, err := analyzeMessage(payload[12:])
+	result, err := analyzeMessage(payload[12:])
 	if err != nil {
 		log.Errorln(err)
 		return
 	}
+	message, err := json.Marshal(&result)
+	if err == nil {
+		websocket.Publish(fmt.Sprintf("device_%v", device.ID), message)
+	}
 
-	if status == orm.DeviceStatusError {
+	if result.Status == orm.DeviceStatusError {
 		fmt.Printf("[ErrorCode]: %v\n", payload)
 	}
 
 	var produceLog orm.DeviceProduceLog
-	produceLog.Record(&device, total, ng)
+	produceLog.Record(&device, result.Total, result.Ng)
 	var statusLog orm.DeviceStatusLog
-	statusLog.Record(&device, status, errorIndex)
+	statusLog.Record(&device, result.Status, result.ErrorIndex)
 }
 
-func analyzeMessage(msg string) (status int, total int, ng int, errorIndex []int, err error) {
+func analyzeMessage(msg string) (result analyzeResult, err error) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Error("analyzeMessage %s\n failed: %v\n", msg, err)
@@ -67,14 +80,14 @@ func analyzeMessage(msg string) (status int, total int, ng int, errorIndex []int
 	}
 
 	// 状态
-	status = wordToStatus(words[0])
+	result.Status = wordToStatus(words[0])
 	// 产量
-	total = wordsToAmount(words[1:3])
+	result.Total = wordsToAmount(words[1:3])
 	// 不良
-	ng = wordsToAmount(words[3:5])
+	result.Ng = wordsToAmount(words[3:5])
 
 	if len(words) > 9 {
-		errorIndex = wordsToErrorIdxs(words[9:])
+		result.ErrorIndex = wordsToErrorIdxs(words[9:])
 	}
 	return
 }
