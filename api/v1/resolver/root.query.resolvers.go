@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/SasukeBo/pmes-device-monitor/api/v1/generated"
 	"github.com/SasukeBo/pmes-device-monitor/api/v1/logic"
 	"github.com/SasukeBo/pmes-device-monitor/api/v1/model"
@@ -45,6 +44,10 @@ func (r *queryResolver) HomeRecentDevices(ctx context.Context, ids []int, limit 
 
 func (r *queryResolver) Devices(ctx context.Context, search *string, status *model.DeviceStatus, page int, limit int) (*model.DeviceWrap, error) {
 	return logic.Devices(ctx, search, status, page, limit)
+}
+
+func (r *queryResolver) DeviceErrors(ctx context.Context, id int, idxs []int) ([]string, error) {
+	return logic.DeviceErrors(ctx, id, idxs)
 }
 
 // Query returns generated.QueryResolver implementation.

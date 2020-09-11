@@ -131,6 +131,7 @@ type ComplexityRoot struct {
 		DashboardDevices         func(childComplexity int, id int) int
 		DashboardOverviewAnalyze func(childComplexity int, id int) int
 		Dashboards               func(childComplexity int, search *string, limit int, page int) int
+		DeviceErrors             func(childComplexity int, id int, idxs []int) int
 		Devices                  func(childComplexity int, search *string, status *model.DeviceStatus, page int, limit int) int
 		HomeDeviceStatusCount    func(childComplexity int) int
 		HomeRecentDevices        func(childComplexity int, ids []int, limit int) int
@@ -147,6 +148,7 @@ type QueryResolver interface {
 	HomeDeviceStatusCount(ctx context.Context) (*model.DashboardDeviceStatusResponse, error)
 	HomeRecentDevices(ctx context.Context, ids []int, limit int) ([]*model.DashboardDevice, error)
 	Devices(ctx context.Context, search *string, status *model.DeviceStatus, page int, limit int) (*model.DeviceWrap, error)
+	DeviceErrors(ctx context.Context, id int, idxs []int) ([]string, error)
 }
 
 type executableSchema struct {
@@ -572,6 +574,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Dashboards(childComplexity, args["search"].(*string), args["limit"].(int), args["page"].(int)), true
 
+	case "Query.deviceErrors":
+		if e.complexity.Query.DeviceErrors == nil {
+			break
+		}
+
+		args, err := ec.field_Query_deviceErrors_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.DeviceErrors(childComplexity, args["id"].(int), args["idxs"].([]int)), true
+
 	case "Query.devices":
 		if e.complexity.Query.Devices == nil {
 			break
@@ -765,6 +779,9 @@ type DeviceWrap {
 
     "设备列表"
     devices(search: String, status: DeviceStatus, page: Int!, limit: Int!): DeviceWrap!
+
+    "查询设备错误信息"
+    deviceErrors(id: Int!, idxs: [Int!]!): [String!]!
 }`, BuiltIn: false},
 	&ast.Source{Name: "schema/schema.graphql", Input: `scalar Time
 `, BuiltIn: false},
@@ -902,6 +919,28 @@ func (ec *executionContext) field_Query_dashboards_args(ctx context.Context, raw
 		}
 	}
 	args["page"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_deviceErrors_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 []int
+	if tmp, ok := rawArgs["idxs"]; ok {
+		arg1, err = ec.unmarshalNInt2ᚕintᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["idxs"] = arg1
 	return args, nil
 }
 
@@ -2995,6 +3034,47 @@ func (ec *executionContext) _Query_devices(ctx context.Context, field graphql.Co
 	return ec.marshalNDeviceWrap2ᚖgithubᚗcomᚋSasukeBoᚋpmesᚑdeviceᚑmonitorᚋapiᚋv1ᚋmodelᚐDeviceWrap(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_deviceErrors(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_deviceErrors_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DeviceErrors(rctx, args["id"].(int), args["idxs"].([]int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4745,6 +4825,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_devices(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "deviceErrors":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_deviceErrors(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

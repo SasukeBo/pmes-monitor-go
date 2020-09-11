@@ -135,3 +135,20 @@ func Devices(ctx context.Context, search *string, status *model.DeviceStatus, pa
 		Total:   total,
 	}, nil
 }
+
+func DeviceErrors(ctx context.Context, id int, idxs []int) ([]string, error) {
+	var device orm.Device
+	if err := device.Get(id); err != nil {
+		return nil, err
+	}
+
+	var errorCode = device.GetErrorCode()
+	msgs := errorCode.GetErrors()
+
+	var outs []string
+	for _, i := range idxs {
+		outs = append(outs, msgs[i])
+	}
+
+	return outs, nil
+}

@@ -24,4 +24,7 @@ type Query {
 
     "设备列表"
     devices(search: String, status: DeviceStatus, page: Int!, limit: Int!): DeviceWrap!
+
+    "查询设备错误信息"
+    deviceErrors(id: Int!, idxs: [Int!]!): [String!]!
 }
