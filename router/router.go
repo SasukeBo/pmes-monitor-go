@@ -29,7 +29,7 @@ func Start() {
 	}
 
 	{
-		r.GET("/monitor/websocket", handler.Websocket)
+		r.GET("/monitor/websocket", handler.Websocket())
 	}
 
 	var port = configer.GetString("service_port")

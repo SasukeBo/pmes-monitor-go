@@ -45,6 +45,8 @@ const (
 	SubscribePrefix   = "SUBSCRIBE:"
 	UnSubscribePrefix = "UNSUBSCRIBE:"
 	CloseWebSocket    = "CLOSE"
+	websocketPing     = "PING"
+	websocketPong     = "PONG"
 )
 
 func (c *WsConn) Close() {
@@ -72,6 +74,10 @@ func (c *WsConn) Receive() bool {
 
 	if message == CloseWebSocket {
 		return true
+	}
+
+	if message == websocketPing { // health check
+		c.Send([]byte(websocketPong))
 	}
 
 	return false
