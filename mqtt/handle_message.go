@@ -48,7 +48,9 @@ func handleMessage(mac, message string) {
 	}
 
 	if result.Status == orm.DeviceStatusError {
-		fmt.Printf("[ErrorCode]: mac: %s, message: %s\n", mac, message)
+		log.Error("mac: %s, message: %s\n", mac, message)
+	} else {
+		log.Info("mac: %s, message: %s\n", mac, message)
 	}
 
 	var produceLog orm.DeviceProduceLog
@@ -120,16 +122,12 @@ func wordToStatus(word []byte) int {
 	switch statusCode {
 	case deviceStatusRunning:
 		status = orm.DeviceStatusRunning
-		fmt.Println("status: Running")
 	case deviceStatusStopped:
 		status = orm.DeviceStatusStopped
-		fmt.Println("status: Stopped")
 	case deviceStatusStoppedWithError, deviceStatusRunningWithError:
 		status = orm.DeviceStatusError
-		fmt.Println("status: Error")
 	case deviceStatusOffline:
 		status = orm.DeviceStatusShutdown
-		fmt.Println("status: Offline")
 	}
 	return status
 }
