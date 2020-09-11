@@ -21,6 +21,7 @@ const (
 )
 
 type analyzeResult struct {
+	DeviceID   int
 	Status     int
 	Total      int
 	Ng         int
@@ -48,6 +49,7 @@ func handleMessage(payload string) {
 		log.Errorln(err)
 		return
 	}
+	result.DeviceID = int(device.ID)
 	message, err := json.Marshal(&result)
 	if err == nil {
 		websocket.Publish(fmt.Sprintf("device_%v", device.ID), message)
