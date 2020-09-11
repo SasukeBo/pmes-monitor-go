@@ -246,9 +246,12 @@ func DashboardOverviewAnalyze(ctx context.Context, id int) (*model.DashboardOver
 	var out model.DashboardOverviewAnalyzeResponse
 	deviceIDs := ds.GetDeviceIDs()
 	shiftTime := getCurrentShift()
-	orm.Model(orm.DeviceProduceLog{}).Where(
+	var pLog orm.DeviceProduceLog
+	orm.Model(&pLog).Where(
 		"device_id in (?) AND created_at > ?", deviceIDs, shiftTime,
-	).Select("SUM(total) as total, SUM(ng) as ng").Scan(&out)
+	).Order("created_at DESC").First(&pLog)
+	out.Total = pLog.Total
+	out.Ng = pLog.NG
 
 	var durations = []int{0, 0, 0, 0}
 	query := orm.Model(orm.DeviceStatusLog{}).Where("device_id in (?) AND created_at > ?", deviceIDs, shiftTime)
