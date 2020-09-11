@@ -16,11 +16,9 @@ import (
 // 一分钟记录一次设备的产量
 type DeviceProduceLog struct {
 	gorm.Model
-	DeviceID     uint `gorm:"COMMENT:'设备ID';column:device_id;index;not null"`
-	Total        int  `gorm:"COMMENT:'记录内产量';column:total"`
-	NG           int  `gorm:"COMMENT:'记录内总不良';column:ng"`
-	CurrentTotal int  `gorm:"COMMENT:'时刻总产量';column:current_total"`
-	CurrentNG    int  `gorm:"COMMENT:'时刻总不良';column:current_ng"`
+	DeviceID uint `gorm:"COMMENT:'设备ID';column:device_id;index;not null"`
+	Total    int  `gorm:"COMMENT:'记录内产量';column:total"`
+	NG       int  `gorm:"COMMENT:'记录内总不良';column:ng"`
 }
 
 func (dpl *DeviceProduceLog) GetLast(mac string) error {
@@ -45,36 +43,21 @@ func (dpl *DeviceProduceLog) GetLast(mac string) error {
 }
 
 func (dpl *DeviceProduceLog) Record(device *Device, ct, cn int) error {
-	var key = fmt.Sprintf("%s-last-dpl", device.Mac)
-	dpl.DeviceID = device.ID
-	dpl.CurrentNG = cn
-	dpl.CurrentTotal = ct
-
 	var last DeviceProduceLog
-	if err := last.GetLast(device.Mac); err != nil {
-		dpl.NG = cn
-		dpl.Total = ct
-	} else {
+	if err := last.GetLast(device.Mac); err == nil {
 		now := time.Now()
-		if now.Sub(last.CreatedAt) < time.Minute {
+		if now.Sub(last.CreatedAt) < time.Minute { // 小于一分钟则不存储
 			return nil
-		}
-		if ct >= last.CurrentTotal && cn >= last.CurrentNG { // 数量非骤减，则表示PLC数据未重置
-			dpl.Total = ct - last.CurrentTotal
-			dpl.NG = cn - last.CurrentNG
-			if dpl.Total == 0 && dpl.NG == 0 { // 值无改变不记录
-				return nil
-			}
-		} else { // 否则当前数量统计更新
-			dpl.Total = ct
-			dpl.NG = cn
 		}
 	}
 
+	dpl.DeviceID = device.ID
+	dpl.NG = cn
+	dpl.Total = ct
 	if err := Create(dpl).Error; err != nil {
 		return err
 	}
-	cache.Put(key, dpl)
+	cache.Put(fmt.Sprintf("%s-last-dpl", device.Mac), dpl)
 	return nil
 }
 

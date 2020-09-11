@@ -9,7 +9,6 @@ import (
 	"github.com/SasukeBo/pmes-device-monitor/orm"
 	"github.com/SasukeBo/pmes-device-monitor/websocket"
 	"math"
-	"strings"
 )
 
 const (
@@ -30,39 +29,32 @@ type analyzeResult struct {
 
 var ErrIllegalPayload = errors.New("illegal payload length")
 
-func handleMessage(payload string) {
-	payload = strings.TrimSpace(payload)
-	if len(payload) < 52 {
-		log.Errorln(ErrIllegalPayload)
-		return
-	}
-
-	mac := payload[0:12]
+func handleMessage(mac, message string) {
 	var device orm.Device
 	if err := device.GetByMAC(mac); err != nil {
 		log.Errorln(err)
 		return
 	}
 
-	result, err := analyzeMessage(payload[12:])
+	result, err := analyzeMessage(message)
 	if err != nil {
 		log.Errorln(err)
 		return
 	}
 	result.DeviceID = int(device.ID)
-	message, err := json.Marshal(&result)
+	data, err := json.Marshal(&result)
 	if err == nil {
-		websocket.Publish(fmt.Sprintf("device_%v", device.ID), message)
+		websocket.Publish(fmt.Sprintf("device_%v", device.ID), data)
 	}
 
 	if result.Status == orm.DeviceStatusError {
-		fmt.Printf("[ErrorCode]: %v\n", payload)
+		fmt.Printf("[ErrorCode]: mac: %s, message: %s\n", mac, message)
 	}
 
 	var produceLog orm.DeviceProduceLog
-	produceLog.Record(&device, result.Total, result.Ng)
+	_ = produceLog.Record(&device, result.Total, result.Ng)
 	var statusLog orm.DeviceStatusLog
-	statusLog.Record(&device, result.Status, result.ErrorIndex)
+	_ = statusLog.Record(&device, result.Status, result.ErrorIndex)
 }
 
 func analyzeMessage(msg string) (result analyzeResult, err error) {

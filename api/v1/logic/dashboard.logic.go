@@ -139,23 +139,14 @@ func realtimeDeviceAnalyze(ids []int) ([]*model.DashboardDevice, error) {
 		}
 
 		var tx = orm.Begin()
-		var lastPLog orm.DeviceProduceLog
-		if err := tx.Model(&lastPLog).Where("device_id = ?", id).Last(&lastPLog).Error; err == nil {
-			out.LastProduceLogID = int(lastPLog.ID)
-		}
-		var lastSLog orm.DeviceStatusLog
-		if err := tx.Model(&lastSLog).Where("device_id = ?", id).Last(&lastSLog).Error; err != nil {
-			out.LastStatusLogID = 0
-			out.LastStatusTime = device.CreatedAt
-		} else {
-			out.LastStatusLogID = int(lastSLog.ID)
-			out.LastStatusTime = lastSLog.CreatedAt
-		}
 
-		// 统计产量
-		tx.Model(orm.DeviceProduceLog{}).Where(
+		// 查询产量
+		var pLog orm.DeviceProduceLog
+		tx.Model(&pLog).Where(
 			"device_id = ? AND created_at > ?", id, shiftTime,
-		).Select("SUM(total) as total, SUM(ng) as ng").Scan(&out)
+		).Order("created_at DESC").First(&pLog)
+		out.Total = pLog.Total
+		out.Ng = pLog.NG
 
 		// 统计时间占比
 		var durations = []int{0, 0, 0, 0}

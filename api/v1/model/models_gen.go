@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"strconv"
-	"time"
 )
 
 type Dashboard struct {
@@ -18,18 +17,15 @@ type Dashboard struct {
 }
 
 type DashboardDevice struct {
-	ID               int       `json:"id"`
-	Number           string    `json:"number"`
-	Status           string    `json:"status"`
-	Total            int       `json:"total"`
-	Ng               int       `json:"ng"`
-	Durations        []int     `json:"durations"`
-	Errors           []string  `json:"errors"`
-	Address          string    `json:"address"`
-	DeviceType       string    `json:"deviceType"`
-	LastProduceLogID int       `json:"lastProduceLogID"`
-	LastStatusLogID  int       `json:"lastStatusLogID"`
-	LastStatusTime   time.Time `json:"lastStatusTime"`
+	ID         int      `json:"id"`
+	Number     string   `json:"number"`
+	Status     string   `json:"status"`
+	Total      int      `json:"total"`
+	Ng         int      `json:"ng"`
+	Durations  []int    `json:"durations"`
+	Errors     []string `json:"errors"`
+	Address    string   `json:"address"`
+	DeviceType string   `json:"deviceType"`
 }
 
 type DashboardDeviceErrorsResponse struct {

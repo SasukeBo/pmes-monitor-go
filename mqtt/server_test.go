@@ -48,7 +48,9 @@ func TestMQTTSend(t *testing.T) {
 	var message = "58528af7ff80 0021 1e73 0000 0000 0000 0000 0000 0000 0000 100a f000 0000 00000000000000000000000000000000"
 	//var message = "58528af7ff84 0010 0040 0000 0001 0000 0000 1000 0008 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000"
 	pubMsg.SetPayload([]byte(strings.ReplaceAll(message, " ", "")))
-	c.Publish(pubMsg, nil)
+	for i := 0; i < 10; i++ {
+		c.Publish(pubMsg, nil)
+	}
 	<-time.After(time.Second)
 }
 

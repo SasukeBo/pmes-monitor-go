@@ -7,6 +7,8 @@ import (
 	"github.com/SasukeBo/log"
 	"github.com/surgemq/message"
 	"github.com/surgemq/surgemq/service"
+	"strings"
+	"sync"
 	"time"
 )
 
@@ -83,6 +85,24 @@ func newConnectMessage(clientName string) *message.ConnectMessage {
 	return msg
 }
 
+var (
+	messageStore    map[string]string
+	messageStoreMux = sync.Mutex{}
+)
+
+// 检查消息是否重复
+func checkDuplicate(mac, message string) bool {
+	messageStoreMux.Lock()
+	defer messageStoreMux.Unlock()
+	v, ok := messageStore[mac]
+	if ok && v == message {
+		return true
+	}
+
+	messageStore[mac] = message
+	return false
+}
+
 func subscribeAndCheckHealth(c *service.Client) error {
 	var healthCheckChan = make(chan struct{})
 	var err error
@@ -96,8 +116,16 @@ func subscribeAndCheckHealth(c *service.Client) error {
 		if topic := string(msg.Topic()); topic == healthCheckTopic {
 			healthCheckChan <- struct{}{}
 		} else {
-			payload := string(msg.Payload())
-			go handleMessage(payload)
+			payload := strings.TrimSpace(string(msg.Payload()))
+			if len(payload) < 52 {
+				log.Errorln(ErrIllegalPayload)
+				return nil
+			}
+			mac := payload[0:12]
+			msg := payload[12:]
+			if !checkDuplicate(mac, msg) {
+				go handleMessage(mac, msg)
+			}
 		}
 		return nil
 	})
@@ -142,5 +170,6 @@ func setHeartBeat() error {
 }
 
 func init() {
+	messageStore = make(map[string]string)
 	uri = fmt.Sprintf("tcp://0.0.0.0:%s", configer.GetString("mqtt_port"))
 }
