@@ -145,7 +145,11 @@ func (dsl *DeviceStatusLog) Record(device *Device, status int, errors []int) err
 		}
 		var now = time.Now()
 		last.Duration = int(now.Sub(last.CreatedAt) / time.Second)
-		Save(&last)
+		if last.Duration == 0 {
+			Delete(&last)
+		} else {
+			Save(&last)
+		}
 	}
 
 	if err := Create(dsl).Error; err != nil {
