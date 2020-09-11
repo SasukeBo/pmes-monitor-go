@@ -13,11 +13,11 @@ import (
 )
 
 const (
-	deviceStatusRunning          = 16
-	deviceStatusStopped          = 17
-	deviceStatusRunningWithError = 18
-	deviceStatusOffline          = 32
-	deviceStatusStoppedWithError = 33
+	deviceStatusRunning          = 16 // 0010
+	deviceStatusStopped          = 17 // 0011
+	deviceStatusRunningWithError = 18 // 0012
+	deviceStatusOffline          = 32 // 0020
+	deviceStatusStoppedWithError = 33 // 0021
 )
 
 type analyzeResult struct {

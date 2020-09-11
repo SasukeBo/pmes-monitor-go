@@ -9,11 +9,8 @@ import (
 	"time"
 )
 
-//var host = "tcp://192.168.9.135:1883"
-var host = "tcp://localhost:44765"
-
-//var host = "tcp://192.168.9.93:44765"
-//var host = "tcp://192.168.5.146:1883"
+//var host = "tcp://localhost:44765"
+var host = "tcp://192.168.5.146:1883"
 
 func TestConnect(t *testing.T) {
 	c := &service.Client{}
@@ -40,17 +37,26 @@ func TestMQTTSend(t *testing.T) {
 
 	pubMsg := message.NewPublishMessage()
 	pubMsg.SetTopic([]byte("PLC"))
-	//             mac 			sta  total 	   ng        error codes
-	var message = "58528af7ff84 0010 0040 0000 0001 0000 0000 1000 0008 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000"
+
+	//deviceStatusRunning          = 16 // 0010
+	//deviceStatusStopped          = 17 // 0011
+	//deviceStatusRunningWithError = 18 // 0012
+	//deviceStatusOffline          = 32 // 0020
+	//deviceStatusStoppedWithError = 33 // 0021
+
+	//             mac 			sta  total 	   ng        					 error codes
+	var message = "58528af7ff80 0021 1e73 0000 0000 0000 0000 0000 0000 0000 100a f000 0000 00000000000000000000000000000000"
+	//var message = "58528af7ff84 0010 0040 0000 0001 0000 0000 1000 0008 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000"
 	pubMsg.SetPayload([]byte(strings.ReplaceAll(message, " ", "")))
 	c.Publish(pubMsg, nil)
+	<-time.After(time.Second)
 }
 
 func TestHandleMessage(t *testing.T) {
 	// 92 46
 	// 58528af7ff84 0011 0375 0000 0000 0000 0010 00f0 0000 0000 0000 0000000000000000000000000000000000000000
 	//var message = "58528af7ff84 0020 1faa 0000 00b1 0000 0000 0000 0000 0004 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000"
-	//                               1         1         1                        1    1
+	//                               1         1         1                   1    1    1
 	var message = "58528af7ff84 0010 1e73 0000 0000 0000 0000 0000 0000 0000 0000 0000 0400 00000000000000000000000000000000"
 	//handleMessage(strings.ReplaceAll(message, " ", ""))
 	payload := strings.ReplaceAll(message, " ", "")
