@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/websocket"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -23,6 +24,26 @@ type WsConn struct {
 	*websocket.Conn
 	topics map[string]struct{}
 	token  string
+	mux    sync.Mutex
+}
+
+func NewWsConn(c *gin.Context) (*WsConn, error) {
+	ws, err := wsUpGrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	uid, err := uuid.NewRandom()
+
+	conn := WsConn{
+		Conn:   ws,
+		topics: make(map[string]struct{}),
+		token:  uid.String(),
+		mux:    sync.Mutex{},
+	}
+
+	connPool[conn.token] = &conn
+	return &conn, nil
 }
 
 func (c *WsConn) AddTopic(topic string) {
@@ -77,7 +98,9 @@ func (c *WsConn) Receive() bool {
 	}
 
 	if message == websocketPing { // health check
+		c.mux.Lock()
 		c.Send([]byte(websocketPong))
+		c.mux.Unlock()
 	}
 
 	return false
@@ -87,24 +110,6 @@ func (c *WsConn) Send(message []byte) {
 	if err := c.WriteMessage(websocket.TextMessage, message); err != nil {
 		c.Close()
 	}
-}
-
-func NewWsConn(c *gin.Context) (*WsConn, error) {
-	ws, err := wsUpGrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	uid, err := uuid.NewRandom()
-
-	conn := WsConn{
-		Conn:   ws,
-		topics: make(map[string]struct{}),
-		token:  uid.String(),
-	}
-
-	connPool[conn.token] = &conn
-	return &conn, nil
 }
 
 type PublishMessage struct {
@@ -134,7 +139,9 @@ func messageDeliver() {
 func handlePublish(pm PublishMessage) {
 	for _, conn := range connPool {
 		if conn.IsSubscriber(pm.Topic) {
+			conn.mux.Lock()
 			conn.Send(pm.Message)
+			conn.mux.Unlock()
 		}
 	}
 }
