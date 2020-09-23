@@ -4,12 +4,20 @@ type Mutation {
     # Admin APIS
     "创建机种"
     adminDeviceTypeCreate(name: String!): String!
+    "删除机种"
+    adminDeviceTypeDelete(id: Int!): String!
     "为机种添加错误代码"
     adminDeviceTypeAddErrorCode(deviceTypeID: Int!, errors: [String!]!): String!
     "保存错误代码"
     adminSaveErrorCode(id: Int!, errors: [String!]!): String!
     "批量创建设备"
     adminCreateDevices(input: CreateDeviceInput!): String!
+    "删除设备"
+    adminDeleteDevice(id: Int!): String!
+    "修改设备"
+    adminEditDevice(id: Int!, update: DeviceInput!): String!
     "创建看板"
     adminCreateDashboard(name: String!, deviceIDs: [Int!]!): String!
+    "删除看板"
+    adminDashboardDelete(id: Int!): String!
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/SasukeBo/pmes-device-monitor/orm"
 	"github.com/SasukeBo/pmes-device-monitor/orm/types"
 	"github.com/jinzhu/copier"
+	"github.com/jinzhu/gorm"
 	"strconv"
 )
 
@@ -65,4 +66,48 @@ func AdminDashboards(ctx context.Context, search *string, page int, limit int) (
 		Total:      count,
 		Dashboards: outs,
 	}, nil
+}
+
+func AdminDashboardDelete(ctx context.Context, id int) (string, error) {
+	var d orm.Dashboard
+	if err := orm.Model(&d).Where("id =  ?", id).First(&d).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return "ERROR", err
+		}
+
+		return "OK", nil
+	}
+
+	if err := orm.Delete(&d).Error; err != nil {
+		return "ERROR", err
+	}
+
+	return "OK", nil
+}
+
+func AdminDashboard(ctx context.Context, id int) (*model.Dashboard, error) {
+	var d orm.Dashboard
+	if err := orm.Model(&d).Where("id = ?", id).First(&d).Error; err != nil {
+		return nil, err
+	}
+
+	var out model.Dashboard
+	out.ID = int(d.ID)
+	out.CreatedAt = d.CreatedAt
+	out.Name = d.Name
+	if value, ok := d.DeviceIDs["deviceIDs"]; ok {
+		if ids, ok := value.([]interface{}); ok {
+			var deviceIDs []int
+			for _, v := range ids {
+				id, err := strconv.Atoi(fmt.Sprint(v))
+				if err != nil {
+					continue
+				}
+				deviceIDs = append(deviceIDs, id)
+			}
+			out.DeviceIDs = deviceIDs
+		}
+	}
+
+	return &out, nil
 }

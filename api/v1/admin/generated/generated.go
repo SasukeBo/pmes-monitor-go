@@ -94,13 +94,18 @@ type ComplexityRoot struct {
 	Mutation struct {
 		AdminCreateDashboard        func(childComplexity int, name string, deviceIDs []int) int
 		AdminCreateDevices          func(childComplexity int, input model.CreateDeviceInput) int
+		AdminDashboardDelete        func(childComplexity int, id int) int
+		AdminDeleteDevice           func(childComplexity int, id int) int
 		AdminDeviceTypeAddErrorCode func(childComplexity int, deviceTypeID int, errors []string) int
 		AdminDeviceTypeCreate       func(childComplexity int, name string) int
+		AdminDeviceTypeDelete       func(childComplexity int, id int) int
+		AdminEditDevice             func(childComplexity int, id int, update model.DeviceInput) int
 		AdminSaveErrorCode          func(childComplexity int, id int, errors []string) int
 		ImportErrors                func(childComplexity int, deviceID int, fileToken string) int
 	}
 
 	Query struct {
+		AdminDashboard   func(childComplexity int, id int) int
 		AdminDashboards  func(childComplexity int, search *string, page int, limit int) int
 		AdminDeviceType  func(childComplexity int, id int) int
 		AdminDeviceTypes func(childComplexity int, search *string, page int, limit int) int
@@ -126,10 +131,14 @@ type DeviceTypeResolver interface {
 type MutationResolver interface {
 	ImportErrors(ctx context.Context, deviceID int, fileToken string) (string, error)
 	AdminDeviceTypeCreate(ctx context.Context, name string) (string, error)
+	AdminDeviceTypeDelete(ctx context.Context, id int) (string, error)
 	AdminDeviceTypeAddErrorCode(ctx context.Context, deviceTypeID int, errors []string) (string, error)
 	AdminSaveErrorCode(ctx context.Context, id int, errors []string) (string, error)
 	AdminCreateDevices(ctx context.Context, input model.CreateDeviceInput) (string, error)
+	AdminDeleteDevice(ctx context.Context, id int) (string, error)
+	AdminEditDevice(ctx context.Context, id int, update model.DeviceInput) (string, error)
 	AdminCreateDashboard(ctx context.Context, name string, deviceIDs []int) (string, error)
+	AdminDashboardDelete(ctx context.Context, id int) (string, error)
 }
 type QueryResolver interface {
 	Hello(ctx context.Context, name string) (string, error)
@@ -137,6 +146,7 @@ type QueryResolver interface {
 	AdminDeviceType(ctx context.Context, id int) (*model.DeviceType, error)
 	AdminDevices(ctx context.Context, search *string, page int, limit int) (*model.DeviceWrap, error)
 	AdminDashboards(ctx context.Context, search *string, page int, limit int) (*model.DashboardWrap, error)
+	AdminDashboard(ctx context.Context, id int) (*model.Dashboard, error)
 }
 
 type executableSchema struct {
@@ -339,6 +349,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AdminCreateDevices(childComplexity, args["input"].(model.CreateDeviceInput)), true
 
+	case "Mutation.adminDashboardDelete":
+		if e.complexity.Mutation.AdminDashboardDelete == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_adminDashboardDelete_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AdminDashboardDelete(childComplexity, args["id"].(int)), true
+
+	case "Mutation.adminDeleteDevice":
+		if e.complexity.Mutation.AdminDeleteDevice == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_adminDeleteDevice_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AdminDeleteDevice(childComplexity, args["id"].(int)), true
+
 	case "Mutation.adminDeviceTypeAddErrorCode":
 		if e.complexity.Mutation.AdminDeviceTypeAddErrorCode == nil {
 			break
@@ -363,6 +397,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AdminDeviceTypeCreate(childComplexity, args["name"].(string)), true
 
+	case "Mutation.adminDeviceTypeDelete":
+		if e.complexity.Mutation.AdminDeviceTypeDelete == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_adminDeviceTypeDelete_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AdminDeviceTypeDelete(childComplexity, args["id"].(int)), true
+
+	case "Mutation.adminEditDevice":
+		if e.complexity.Mutation.AdminEditDevice == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_adminEditDevice_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AdminEditDevice(childComplexity, args["id"].(int), args["update"].(model.DeviceInput)), true
+
 	case "Mutation.adminSaveErrorCode":
 		if e.complexity.Mutation.AdminSaveErrorCode == nil {
 			break
@@ -386,6 +444,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ImportErrors(childComplexity, args["deviceID"].(int), args["fileToken"].(string)), true
+
+	case "Query.adminDashboard":
+		if e.complexity.Query.AdminDashboard == nil {
+			break
+		}
+
+		args, err := ec.field_Query_adminDashboard_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AdminDashboard(childComplexity, args["id"].(int)), true
 
 	case "Query.adminDashboards":
 		if e.complexity.Query.AdminDashboards == nil {
@@ -531,14 +601,22 @@ var sources = []*ast.Source{
     # Admin APIS
     "创建机种"
     adminDeviceTypeCreate(name: String!): String!
+    "删除机种"
+    adminDeviceTypeDelete(id: Int!): String!
     "为机种添加错误代码"
     adminDeviceTypeAddErrorCode(deviceTypeID: Int!, errors: [String!]!): String!
     "保存错误代码"
     adminSaveErrorCode(id: Int!, errors: [String!]!): String!
     "批量创建设备"
     adminCreateDevices(input: CreateDeviceInput!): String!
+    "删除设备"
+    adminDeleteDevice(id: Int!): String!
+    "修改设备"
+    adminEditDevice(id: Int!, update: DeviceInput!): String!
     "创建看板"
     adminCreateDashboard(name: String!, deviceIDs: [Int!]!): String!
+    "删除看板"
+    adminDashboardDelete(id: Int!): String!
 }`, BuiltIn: false},
 	&ast.Source{Name: "schema/root.query.graphql", Input: `type Query {
    hello(name: String!): String!
@@ -552,6 +630,8 @@ var sources = []*ast.Source{
    adminDevices(search: String, page: Int!, limit: Int!): DeviceWrap!
    "获取看板列表"
    adminDashboards(search: String, page: Int!, limit: Int!):DashboardWrap!
+   "获取看板"
+   adminDashboard(id: Int!):Dashboard!
 }`, BuiltIn: false},
 	&ast.Source{Name: "schema/schema.graphql", Input: `scalar Time
 
@@ -657,6 +737,34 @@ func (ec *executionContext) field_Mutation_adminCreateDevices_args(ctx context.C
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_adminDashboardDelete_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_adminDeleteDevice_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_adminDeviceTypeAddErrorCode_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -690,6 +798,42 @@ func (ec *executionContext) field_Mutation_adminDeviceTypeCreate_args(ctx contex
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_adminDeviceTypeDelete_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_adminEditDevice_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.DeviceInput
+	if tmp, ok := rawArgs["update"]; ok {
+		arg1, err = ec.unmarshalNDeviceInput2githubᚗcomᚋSasukeBoᚋpmesᚑdeviceᚑmonitorᚋapiᚋv1ᚋadminᚋmodelᚐDeviceInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["update"] = arg1
 	return args, nil
 }
 
@@ -748,6 +892,20 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_adminDashboard_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -1766,6 +1924,47 @@ func (ec *executionContext) _Mutation_adminDeviceTypeCreate(ctx context.Context,
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_adminDeviceTypeDelete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_adminDeviceTypeDelete_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AdminDeviceTypeDelete(rctx, args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_adminDeviceTypeAddErrorCode(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1889,6 +2088,88 @@ func (ec *executionContext) _Mutation_adminCreateDevices(ctx context.Context, fi
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_adminDeleteDevice(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_adminDeleteDevice_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AdminDeleteDevice(rctx, args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_adminEditDevice(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_adminEditDevice_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AdminEditDevice(rctx, args["id"].(int), args["update"].(model.DeviceInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_adminCreateDashboard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1914,6 +2195,47 @@ func (ec *executionContext) _Mutation_adminCreateDashboard(ctx context.Context, 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().AdminCreateDashboard(rctx, args["name"].(string), args["deviceIDs"].([]int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_adminDashboardDelete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_adminDashboardDelete_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AdminDashboardDelete(rctx, args["id"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2133,6 +2455,47 @@ func (ec *executionContext) _Query_adminDashboards(ctx context.Context, field gr
 	res := resTmp.(*model.DashboardWrap)
 	fc.Result = res
 	return ec.marshalNDashboardWrap2ᚖgithubᚗcomᚋSasukeBoᚋpmesᚑdeviceᚑmonitorᚋapiᚋv1ᚋadminᚋmodelᚐDashboardWrap(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_adminDashboard(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_adminDashboard_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().AdminDashboard(rctx, args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Dashboard)
+	fc.Result = res
+	return ec.marshalNDashboard2ᚖgithubᚗcomᚋSasukeBoᚋpmesᚑdeviceᚑmonitorᚋapiᚋv1ᚋadminᚋmodelᚐDashboard(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3707,6 +4070,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "adminDeviceTypeDelete":
+			out.Values[i] = ec._Mutation_adminDeviceTypeDelete(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "adminDeviceTypeAddErrorCode":
 			out.Values[i] = ec._Mutation_adminDeviceTypeAddErrorCode(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -3722,8 +4090,23 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "adminDeleteDevice":
+			out.Values[i] = ec._Mutation_adminDeleteDevice(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "adminEditDevice":
+			out.Values[i] = ec._Mutation_adminEditDevice(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "adminCreateDashboard":
 			out.Values[i] = ec._Mutation_adminCreateDashboard(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "adminDashboardDelete":
+			out.Values[i] = ec._Mutation_adminDashboardDelete(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3818,6 +4201,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_adminDashboards(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "adminDashboard":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_adminDashboard(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

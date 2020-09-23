@@ -45,7 +45,7 @@ func TestMQTTSend(t *testing.T) {
 	//deviceStatusStoppedWithError = 33 // 0021
 
 	//             mac 			sta  total 	   ng        					 error codes
-	var message = "58528af7ff80 0020 1e73 0000 0000 0000 0000 0000 0000 0000 100a f000 0000 00000000000000000000000000000000"
+	var message = "58528af7ff80 0021 1e73 0000 0000 0000 0000 0000 0000 0000 100a f000 0000 00000000000000000000000000000000"
 	//var message = "58528af7ff84 0010 0040 0000 0001 0000 0000 1000 0008 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000"
 	pubMsg.SetPayload([]byte(strings.ReplaceAll(message, " ", "")))
 	for i := 0; i < 10; i++ {

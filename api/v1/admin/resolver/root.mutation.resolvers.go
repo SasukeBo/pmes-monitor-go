@@ -19,6 +19,10 @@ func (r *mutationResolver) AdminDeviceTypeCreate(ctx context.Context, name strin
 	return logic.AdminDeviceTypeCreate(ctx, name)
 }
 
+func (r *mutationResolver) AdminDeviceTypeDelete(ctx context.Context, id int) (string, error) {
+	return logic.AdminDeviceTypeDelete(ctx, id)
+}
+
 func (r *mutationResolver) AdminDeviceTypeAddErrorCode(ctx context.Context, deviceTypeID int, errors []string) (string, error) {
 	return logic.AdminDeviceTypeAddErrorCode(ctx, deviceTypeID, errors)
 }
@@ -31,8 +35,20 @@ func (r *mutationResolver) AdminCreateDevices(ctx context.Context, input model.C
 	return logic.AdminCreateDevices(ctx, input)
 }
 
+func (r *mutationResolver) AdminDeleteDevice(ctx context.Context, id int) (string, error) {
+	return logic.AdminDeleteDevice(ctx, id)
+}
+
+func (r *mutationResolver) AdminEditDevice(ctx context.Context, id int, update model.DeviceInput) (string, error) {
+	return logic.AdminEditDevice(ctx, id, update)
+}
+
 func (r *mutationResolver) AdminCreateDashboard(ctx context.Context, name string, deviceIDs []int) (string, error) {
 	return logic.AdminCreateDashboard(ctx, name, deviceIDs)
+}
+
+func (r *mutationResolver) AdminDashboardDelete(ctx context.Context, id int) (string, error) {
+	return logic.AdminDashboardDelete(ctx, id)
 }
 
 // Mutation returns generated.MutationResolver implementation.

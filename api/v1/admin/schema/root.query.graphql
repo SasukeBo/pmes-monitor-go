@@ -10,4 +10,6 @@ type Query {
    adminDevices(search: String, page: Int!, limit: Int!): DeviceWrap!
    "获取看板列表"
    adminDashboards(search: String, page: Int!, limit: Int!):DashboardWrap!
+   "获取看板"
+   adminDashboard(id: Int!):Dashboard!
 }

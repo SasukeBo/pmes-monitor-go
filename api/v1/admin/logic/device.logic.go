@@ -74,6 +74,19 @@ func AdminDeviceTypeCreate(ctx context.Context, name string) (string, error) {
 	return "ok", nil
 }
 
+func AdminDeviceTypeDelete(ctx context.Context, id int) (string, error) {
+	var dt orm.DeviceType
+	if err := orm.Model(&dt).Where("id = ?", id).First(&dt).Error; err != nil {
+		return "OK", nil
+	}
+
+	if err := orm.Delete(&dt).Error; err != nil {
+		return "ERROR", err
+	}
+
+	return "OK", nil
+}
+
 func AdminDeviceTypes(ctx context.Context, search *string, page int, limit int) (*model.DeviceTypeWrap, error) {
 	//user := api.CurrentUser(ctx)
 	//if user == nil {
@@ -286,4 +299,35 @@ func LoadDevices(ctx context.Context, ids []int) []*model.Device {
 	}
 
 	return outs
+}
+
+func AdminDeleteDevice(ctx context.Context, id int) (string, error) {
+	var device orm.Device
+	if err := orm.Model(&device).Where("id = ?", id).First(&device).Error; err != nil {
+		return "OK", nil
+	}
+
+	if err := orm.Delete(&device).Error; err != nil {
+		return "ERROR", err
+	}
+
+	return "OK", nil
+}
+
+func AdminEditDevice(ctx context.Context, id int, update model.DeviceInput) (string, error) {
+	var device orm.Device
+	if err := orm.Model(&device).Where("id = ?", id).First(&device).Error; err != nil {
+		return "ERROR", err
+	}
+
+	if update.Address != nil {
+		device.Address = *update.Address
+	}
+	device.Number = update.Number
+	device.Mac = update.Mac
+	if err := orm.Save(&device).Error; err != nil {
+		return "ERROR", err
+	}
+
+	return "OK", nil
 }
